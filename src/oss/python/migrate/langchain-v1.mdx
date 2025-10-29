@@ -959,5 +959,5 @@ The `example` parameter has been removed from @[`AIMessage`] objects. We recomme
 - `AIMessageChunk` objects now include a `chunk_position` attribute with position `'last'` to indicate the final chunk in a stream. This allows for clearer handling of streamed messages. If the chunk is not the final one, `chunk_position` will be `None`.
 - `LanguageModelOutputVar` is now typed to @[`AIMessage`] instead of @[`BaseMessage`].
 - The logic for merging message chunks (`AIMessageChunk.add`) has been updated with more sophisticated selection handling for the final id for the merged chunk. It prioritizes provider-assigned IDs over LangChain-generated IDs.
-- We now open files with `utf-8` encoding by default
+- We now open files with `utf-8` encoding by default.
 - Standard tests now use multimodal content blocks in tests.
