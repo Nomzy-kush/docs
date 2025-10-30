@@ -1,0 +1,1336 @@
+---
+title: Middleware
+description: Control and customize agent execution at every step
+---
+
+
+
+Middleware provides a way to more tightly control what happens inside the agent.
+
+The core agent loop involves calling a model, letting it choose tools to execute, and then finishing when it calls no more tools:
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/oss/images/core_agent_loop.png"
+    alt="Core agent loop diagram"
+    className="rounded-lg"
+  />
+</div>
+
+Middleware exposes hooks before and after each of those steps:
+
+<div style={{ display: "flex", justifyContent: "center" }}>
+  <img
+    src="/oss/images/middleware_final.png"
+    alt="Middleware flow diagram"
+    className="rounded-lg"
+  />
+</div>
+
+## What can middleware do?
+
+<CardGroup cols={2}>
+  <Card title="Monitor" icon="chart-line">
+    Track agent behavior with logging, analytics, and debugging
+  </Card>
+  <Card title="Modify" icon="pencil">
+    Transform prompts, tool selection, and output formatting
+  </Card>
+  <Card title="Control" icon="sliders">
+    Add retries, fallbacks, and early termination logic
+  </Card>
+  <Card title="Enforce" icon="shield">
+    Apply rate limits, guardrails, and PII detection
+  </Card>
+</CardGroup>
+
+Add middleware by passing it to [`create_agent`](https://reference.langchain.com/python/langchain/agents/#langchain.agents.create_agent):
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware, HumanInTheLoopMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[SummarizationMiddleware(), HumanInTheLoopMiddleware()],
+)
+```
+
+
+
+
+## Built-in middleware
+
+LangChain provides prebuilt middleware for common use cases:
+
+### Summarization
+
+Automatically summarize conversation history when approaching token limits.
+
+<Tip>
+**Perfect for:**
+- Long-running conversations that exceed context windows
+- Multi-turn dialogues with extensive history
+- Applications where preserving full conversation context matters
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import SummarizationMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[weather_tool, calculator_tool],
+    middleware=[
+        SummarizationMiddleware(
+            model="openai:gpt-4o-mini",
+            max_tokens_before_summary=4000,  # Trigger summarization at 4000 tokens
+            messages_to_keep=20,  # Keep last 20 messages after summary
+            summary_prompt="Custom prompt for summarization...",  # Optional
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="model" type="string" required>
+  Model for generating summaries
+</ParamField>
+
+<ParamField body="max_tokens_before_summary" type="number">
+  Token threshold for triggering summarization
+</ParamField>
+
+<ParamField body="messages_to_keep" type="number" default="20">
+  Recent messages to preserve
+</ParamField>
+
+<ParamField body="token_counter" type="function">
+  Custom token counting function. Defaults to character-based counting.
+</ParamField>
+
+<ParamField body="summary_prompt" type="string">
+  Custom prompt template. Uses built-in template if not specified.
+</ParamField>
+
+<ParamField body="summary_prefix" type="string" default="## Previous conversation summary:">
+  Prefix for summary messages
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Human-in-the-loop
+
+Pause agent execution for human approval, editing, or rejection of tool calls before they execute.
+
+<Tip>
+**Perfect for:**
+- High-stakes operations requiring human approval (database writes, financial transactions)
+- Compliance workflows where human oversight is mandatory
+- Long running conversations where human feedback is used to guide the agent
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[read_email_tool, send_email_tool],
+    checkpointer=InMemorySaver(),
+    middleware=[
+        HumanInTheLoopMiddleware(
+            interrupt_on={
+                # Require approval, editing, or rejection for sending emails
+                "send_email_tool": {
+                    "allowed_decisions": ["approve", "edit", "reject"],
+                },
+                # Auto-approve reading emails
+                "read_email_tool": False,
+            }
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="interrupt_on" type="dict" required>
+  Mapping of tool names to approval configs. Values can be `True` (interrupt with default config), `False` (auto-approve), or an `InterruptOnConfig` object.
+</ParamField>
+
+<ParamField body="description_prefix" type="string" default="Tool execution requires approval">
+  Prefix for action request descriptions
+</ParamField>
+
+**`InterruptOnConfig` options:**
+
+<ParamField body="allowed_decisions" type="list[string]">
+  List of allowed decisions: `"approve"`, `"edit"`, or `"reject"`
+</ParamField>
+
+<ParamField body="description" type="string | callable">
+  Static string or callable function for custom description
+</ParamField>
+
+
+
+
+</Accordion>
+
+<Note>
+**Important:** Human-in-the-loop middleware requires a [checkpointer](/oss/python/langgraph/persistence#checkpoints) to maintain state across interruptions.
+
+See the [human-in-the-loop documentation](/oss/python/langchain/human-in-the-loop) for complete examples and integration patterns.
+</Note>
+
+### Anthropic prompt caching
+
+Reduce costs by caching repetitive prompt prefixes with Anthropic models.
+
+<Tip>
+**Perfect for:**
+- Applications with long, repeated system prompts
+- Agents that reuse the same context across invocations
+- Reducing API costs for high-volume deployments
+</Tip>
+
+<Info>
+Learn more about [Anthropic Prompt Caching](https://docs.claude.com/en/docs/build-with-claude/prompt-caching#cache-limitations) strategies and limitations.
+</Info>
+
+```python
+from langchain_anthropic import ChatAnthropic
+from langchain_anthropic.middleware import AnthropicPromptCachingMiddleware
+from langchain.agents import create_agent
+
+
+LONG_PROMPT = """
+Please be a helpful assistant.
+
+<Lots more context ...>
+"""
+
+agent = create_agent(
+    model=ChatAnthropic(model="claude-sonnet-4-latest"),
+    system_prompt=LONG_PROMPT,
+    middleware=[AnthropicPromptCachingMiddleware(ttl="5m")],
+)
+
+# cache store
+agent.invoke({"messages": [HumanMessage("Hi, my name is Bob")]})
+
+# cache hit, system prompt is cached
+agent.invoke({"messages": [HumanMessage("What's my name?")]})
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="type" type="string" default="ephemeral">
+  Cache type. Only `"ephemeral"` is currently supported.
+</ParamField>
+
+<ParamField body="ttl" type="string" default="5m">
+  Time to live for cached content. Valid values: `"5m"` or `"1h"`
+</ParamField>
+
+<ParamField body="min_messages_to_cache" type="number" default="0">
+  Minimum number of messages before caching starts
+</ParamField>
+
+<ParamField body="unsupported_model_behavior" type="string" default="warn">
+  Behavior when using non-Anthropic models. Options: `"ignore"`, `"warn"`, or `"raise"`
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Model call limit
+
+Limit the number of model calls to prevent infinite loops or excessive costs.
+
+<Tip>
+**Perfect for:**
+- Preventing runaway agents from making too many API calls
+- Enforcing cost controls on production deployments
+- Testing agent behavior within specific call budgets
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelCallLimitMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[
+        ModelCallLimitMiddleware(
+            thread_limit=10,  # Max 10 calls per thread (across runs)
+            run_limit=5,  # Max 5 calls per run (single invocation)
+            exit_behavior="end",  # Or "error" to raise exception
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="thread_limit" type="number">
+  Maximum model calls across all runs in a thread. Defaults to no limit.
+</ParamField>
+
+<ParamField body="run_limit" type="number">
+  Maximum model calls per single invocation. Defaults to no limit.
+</ParamField>
+
+<ParamField body="exit_behavior" type="string" default="end">
+  Behavior when limit is reached. Options: `"end"` (graceful termination) or `"error"` (raise exception)
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Tool call limit
+
+Limit the number of tool calls to specific tools or all tools.
+
+<Tip>
+**Perfect for:**
+- Preventing excessive calls to expensive external APIs
+- Limiting web searches or database queries
+- Enforcing rate limits on specific tool usage
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolCallLimitMiddleware
+
+
+# Limit all tool calls
+global_limiter = ToolCallLimitMiddleware(thread_limit=20, run_limit=10)
+
+# Limit specific tool
+search_limiter = ToolCallLimitMiddleware(
+    tool_name="search",
+    thread_limit=5,
+    run_limit=3,
+)
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[global_limiter, search_limiter],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="tool_name" type="string">
+  Specific tool to limit. If not provided, limits apply to all tools.
+</ParamField>
+
+<ParamField body="thread_limit" type="number">
+  Maximum tool calls across all runs in a thread. Defaults to no limit.
+</ParamField>
+
+<ParamField body="run_limit" type="number">
+  Maximum tool calls per single invocation. Defaults to no limit.
+</ParamField>
+
+<ParamField body="exit_behavior" type="string" default="end">
+  Behavior when limit is reached. Options: `"end"` (graceful termination) or `"error"` (raise exception)
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Model fallback
+
+Automatically fallback to alternative models when the primary model fails.
+
+<Tip>
+**Perfect for:**
+- Building resilient agents that handle model outages
+- Cost optimization by falling back to cheaper models
+- Provider redundancy across OpenAI, Anthropic, etc.
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ModelFallbackMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",  # Primary model
+    tools=[...],
+    middleware=[
+        ModelFallbackMiddleware(
+            "openai:gpt-4o-mini",  # Try first on error
+            "anthropic:claude-3-5-sonnet-20241022",  # Then this
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="first_model" type="string | BaseChatModel" required>
+  First fallback model to try when the primary model fails. Can be a model string (e.g., `"openai:gpt-4o-mini"`) or a `BaseChatModel` instance.
+</ParamField>
+
+<ParamField body="*additional_models" type="string | BaseChatModel">
+  Additional fallback models to try in order if previous models fail
+</ParamField>
+
+
+
+
+</Accordion>
+
+### PII detection
+
+Detect and handle Personally Identifiable Information in conversations.
+
+<Tip>
+**Perfect for:**
+- Healthcare and financial applications with compliance requirements
+- Customer service agents that need to sanitize logs
+- Any application handling sensitive user data
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import PIIMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[
+        # Redact emails in user input
+        PIIMiddleware("email", strategy="redact", apply_to_input=True),
+        # Mask credit cards (show last 4 digits)
+        PIIMiddleware("credit_card", strategy="mask", apply_to_input=True),
+        # Custom PII type with regex
+        PIIMiddleware(
+            "api_key",
+            detector=r"sk-[a-zA-Z0-9]{32}",
+            strategy="block",  # Raise error if detected
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="pii_type" type="string" required>
+  Type of PII to detect. Can be a built-in type (`email`, `credit_card`, `ip`, `mac_address`, `url`) or a custom type name.
+</ParamField>
+
+<ParamField body="strategy" type="string" default="redact">
+  How to handle detected PII. Options:
+  - `"block"` - Raise exception when detected
+  - `"redact"` - Replace with `[REDACTED_TYPE]`
+  - `"mask"` - Partially mask (e.g., `****-****-****-1234`)
+  - `"hash"` - Replace with deterministic hash
+</ParamField>
+
+<ParamField body="detector" type="function | regex">
+  Custom detector function or regex pattern. If not provided, uses built-in detector for the PII type.
+</ParamField>
+
+<ParamField body="apply_to_input" type="boolean" default="True">
+  Check user messages before model call
+</ParamField>
+
+<ParamField body="apply_to_output" type="boolean" default="False">
+  Check AI messages after model call
+</ParamField>
+
+<ParamField body="apply_to_tool_results" type="boolean" default="False">
+  Check tool result messages after execution
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Planning
+
+Add todo list management capabilities for complex multi-step tasks.
+
+<Note>
+This middleware automatically provides agents with a `write_todos` tool and system prompts to guide effective task planning.
+</Note>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import TodoListMiddleware
+from langchain.messages import HumanMessage
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[TodoListMiddleware()],
+)
+
+result = agent.invoke({"messages": [HumanMessage("Help me refactor my codebase")]})
+print(result["todos"])  # Array of todo items with status tracking
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="system_prompt" type="string">
+  Custom system prompt for guiding todo usage. Uses built-in prompt if not specified.
+</ParamField>
+
+<ParamField body="tool_description" type="string">
+  Custom description for the `write_todos` tool. Uses built-in description if not specified.
+</ParamField>
+
+
+
+
+</Accordion>
+
+### LLM tool selector
+
+Use an LLM to intelligently select relevant tools before calling the main model.
+
+<Tip>
+**Perfect for:**
+- Agents with many tools (10+) where most aren't relevant per query
+- Reducing token usage by filtering irrelevant tools
+- Improving model focus and accuracy
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import LLMToolSelectorMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[tool1, tool2, tool3, tool4, tool5, ...],  # Many tools
+    middleware=[
+        LLMToolSelectorMiddleware(
+            model="openai:gpt-4o-mini",  # Use cheaper model for selection
+            max_tools=3,  # Limit to 3 most relevant tools
+            always_include=["search"],  # Always include certain tools
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="model" type="string | BaseChatModel">
+  Model for tool selection. Can be a model string or `BaseChatModel` instance. Defaults to the agent's main model.
+</ParamField>
+
+<ParamField body="system_prompt" type="string">
+  Instructions for the selection model. Uses built-in prompt if not specified.
+</ParamField>
+
+<ParamField body="max_tools" type="number">
+  Maximum number of tools to select. Defaults to no limit.
+</ParamField>
+
+<ParamField body="always_include" type="list[string]">
+  List of tool names to always include in the selection
+</ParamField>
+
+
+
+
+</Accordion>
+
+### Tool retry
+
+Automatically retry failed tool calls with configurable exponential backoff.
+
+<Tip>
+**Perfect for:**
+- Handling transient failures in external API calls
+- Improving reliability of network-dependent tools
+- Building resilient agents that gracefully handle temporary errors
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ToolRetryMiddleware
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[search_tool, database_tool],
+    middleware=[
+        ToolRetryMiddleware(
+            max_retries=3,  # Retry up to 3 times
+            backoff_factor=2.0,  # Exponential backoff multiplier
+            initial_delay=1.0,  # Start with 1 second delay
+            max_delay=60.0,  # Cap delays at 60 seconds
+            jitter=True,  # Add random jitter to avoid thundering herd
+        ),
+    ],
+)
+```
+
+<Accordion title="Configuration options">
+
+<ParamField body="max_retries" type="number" default="2">
+  Maximum number of retry attempts after the initial call (3 total attempts with default)
+</ParamField>
+
+<ParamField body="tools" type="list[BaseTool | str]">
+  Optional list of tools or tool names to apply retry logic to. If `None`, applies to all tools.
+</ParamField>
+
+<ParamField body="retry_on" type="tuple[type[Exception], ...] | callable" default="(Exception,)">
+  Either a tuple of exception types to retry on, or a callable that takes an exception and returns `True` if it should be retried.
+</ParamField>
+
+<ParamField body="on_failure" type="string | callable" default="return_message">
+  Behavior when all retries are exhausted. Options:
+  - `"return_message"` - Return a ToolMessage with error details (allows LLM to handle failure)
+  - `"raise"` - Re-raise the exception (stops agent execution)
+  - Custom callable - Function that takes the exception and returns a string for the ToolMessage content
+</ParamField>
+
+<ParamField body="backoff_factor" type="number" default="2.0">
+  Multiplier for exponential backoff. Each retry waits `initial_delay * (backoff_factor ** retry_number)` seconds. Set to 0.0 for constant delay.
+</ParamField>
+
+<ParamField body="initial_delay" type="number" default="1.0">
+  Initial delay in seconds before first retry
+</ParamField>
+
+<ParamField body="max_delay" type="number" default="60.0">
+  Maximum delay in seconds between retries (caps exponential backoff growth)
+</ParamField>
+
+<ParamField body="jitter" type="boolean" default="true">
+  Whether to add random jitter (±25%) to delay to avoid thundering herd
+</ParamField>
+
+</Accordion>
+
+
+
+### LLM tool emulator
+
+Emulate tool execution using an LLM for testing purposes, replacing actual tool calls with AI-generated responses.
+
+<Tip>
+**Perfect for:**
+- Testing agent behavior without executing real tools
+- Developing agents when external tools are unavailable or expensive
+- Prototyping agent workflows before implementing actual tools
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import LLMToolEmulator
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[get_weather, search_database, send_email],
+    middleware=[
+        # Emulate all tools by default
+        LLMToolEmulator(),
+
+        # Or emulate specific tools
+        # LLMToolEmulator(tools=["get_weather", "search_database"]),
+
+        # Or use a custom model for emulation
+        # LLMToolEmulator(model="anthropic:claude-3-5-sonnet-latest"),
+    ],
+)
+```
+
+<Accordion title="Configuration options">
+
+<ParamField body="tools" type="list[str | BaseTool]">
+  List of tool names (str) or BaseTool instances to emulate. If `None` (default), ALL tools will be emulated. If empty list, no tools will be emulated.
+</ParamField>
+
+<ParamField body="model" type="string | BaseChatModel" default="anthropic:claude-3-5-sonnet-latest">
+  Model to use for generating emulated tool responses. Can be a model identifier string or BaseChatModel instance.
+</ParamField>
+
+</Accordion>
+
+
+
+### Context editing
+
+Manage conversation context by trimming, summarizing, or clearing tool uses.
+
+<Tip>
+**Perfect for:**
+- Long conversations that need periodic context cleanup
+- Removing failed tool attempts from context
+- Custom context management strategies
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import ContextEditingMiddleware, ClearToolUsesEdit
+
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=[...],
+    middleware=[
+        ContextEditingMiddleware(
+            edits=[
+                ClearToolUsesEdit(max_tokens=1000),  # Clear old tool uses
+            ],
+        ),
+    ],
+)
+```
+
+
+
+
+<Accordion title="Configuration options">
+
+<ParamField body="edits" type="list[ContextEdit]" default="[ClearToolUsesEdit()]">
+  List of `ContextEdit` strategies to apply
+</ParamField>
+
+<ParamField body="token_count_method" type="string" default="approximate">
+  Token counting method. Options: `"approximate"` or `"model"`
+</ParamField>
+
+**[`ClearToolUsesEdit`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.ClearToolUsesEdit) options:**
+
+<ParamField body="trigger" type="number" default="100000">
+  Token count that triggers the edit
+</ParamField>
+
+<ParamField body="clear_at_least" type="number" default="0">
+  Minimum tokens to reclaim
+</ParamField>
+
+<ParamField body="keep" type="number" default="3">
+  Number of recent tool results to preserve
+</ParamField>
+
+<ParamField body="clear_tool_inputs" type="boolean" default="False">
+  Whether to clear tool call parameters
+</ParamField>
+
+<ParamField body="exclude_tools" type="list[string]" default="()">
+  List of tool names to exclude from clearing
+</ParamField>
+
+<ParamField body="placeholder" type="string" default="[cleared]">
+  Placeholder text for cleared outputs
+</ParamField>
+
+
+
+
+</Accordion>
+
+## Custom middleware
+
+Build custom middleware by implementing hooks that run at specific points in the agent execution flow.
+
+You can create middleware in two ways:
+1. **Decorator-based** - Quick and simple for single-hook middleware
+2. **Class-based** - More powerful for complex middleware with multiple hooks
+
+## Decorator-based middleware
+
+For simple middleware that only needs a single hook, decorators provide the quickest way to add functionality:
+
+```python
+from langchain.agents.middleware import before_model, after_model, wrap_model_call
+from langchain.agents.middleware import AgentState, ModelRequest, ModelResponse, dynamic_prompt
+from langchain.messages import AIMessage
+from langchain.agents import create_agent
+from langgraph.runtime import Runtime
+from typing import Any, Callable
+
+
+# Node-style: logging before model calls
+@before_model
+def log_before_model(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+    print(f"About to call model with {len(state['messages'])} messages")
+    return None
+
+# Node-style: validation after model calls
+@after_model(can_jump_to=["end"])
+def validate_output(state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+    last_message = state["messages"][-1]
+    if "BLOCKED" in last_message.content:
+        return {
+            "messages": [AIMessage("I cannot respond to that request.")],
+            "jump_to": "end"
+        }
+    return None
+
+# Wrap-style: retry logic
+@wrap_model_call
+def retry_model(
+    request: ModelRequest,
+    handler: Callable[[ModelRequest], ModelResponse],
+) -> ModelResponse:
+    for attempt in range(3):
+        try:
+            return handler(request)
+        except Exception as e:
+            if attempt == 2:
+                raise
+            print(f"Retry {attempt + 1}/3 after error: {e}")
+
+# Wrap-style: dynamic prompts
+@dynamic_prompt
+def personalized_prompt(request: ModelRequest) -> str:
+    user_id = request.runtime.context.get("user_id", "guest")
+    return f"You are a helpful assistant for user {user_id}. Be concise and friendly."
+
+# Use decorators in agent
+agent = create_agent(
+    model="openai:gpt-4o",
+    middleware=[log_before_model, validate_output, retry_model, personalized_prompt],
+    tools=[...],
+)
+```
+
+### Available decorators
+
+**Node-style** (run at specific execution points):
+- `@before_agent` - Before agent starts (once per invocation)
+- [`@before_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.before_model) - Before each model call
+- [`@after_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.after_model) - After each model response
+- `@after_agent` - After agent completes (once per invocation)
+
+**Wrap-style** (intercept and control execution):
+- [`@wrap_model_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_model_call) - Around each model call
+- [`@wrap_tool_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_tool_call) - Around each tool call
+
+**Convenience decorators**:
+- [`@dynamic_prompt`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.dynamic_prompt) - Generates dynamic system prompts (equivalent to [`@wrap_model_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_model_call) that modifies the prompt)
+
+### When to use decorators
+
+<CardGroup cols={2}>
+    <Card title="Use decorators when" icon="check">
+        • You need a single hook<br/>
+        • No complex configuration
+    </Card>
+    <Card title="Use classes when" icon="code">
+        • Multiple hooks needed<br/>
+        • Complex configuration<br/>
+        • Reuse across projects (config on init)
+    </Card>
+</CardGroup>
+
+
+
+## Class-based middleware
+
+### Two hook styles
+
+<CardGroup cols={2}>
+    <Card title="Node-style hooks" icon="diagram-project">
+        Run sequentially at specific execution points. Use for logging, validation, and state updates.
+    </Card>
+    <Card title="Wrap-style hooks" icon="arrows-rotate">
+        Intercept execution with full control over handler calls. Use for retries, caching, and transformation.
+    </Card>
+</CardGroup>
+
+#### Node-style hooks
+
+Run at specific points in the execution flow:
+
+- `before_agent` - Before agent starts (once per invocation)
+- `before_model` - Before each model call
+- `after_model` - After each model response
+- `after_agent` - After agent completes (up to once per invocation)
+
+
+
+
+**Example: Logging middleware**
+
+```python
+from langchain.agents.middleware import AgentMiddleware, AgentState
+from langgraph.runtime import Runtime
+from typing import Any
+
+class LoggingMiddleware(AgentMiddleware):
+    def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        print(f"About to call model with {len(state['messages'])} messages")
+        return None
+
+    def after_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        print(f"Model returned: {state['messages'][-1].content}")
+        return None
+```
+
+
+
+
+**Example: Conversation length limit**
+
+```python
+from langchain.agents.middleware import AgentMiddleware, AgentState
+from langchain.messages import AIMessage
+from langgraph.runtime import Runtime
+from typing import Any
+
+class MessageLimitMiddleware(AgentMiddleware):
+    def __init__(self, max_messages: int = 50):
+        super().__init__()
+        self.max_messages = max_messages
+
+    def before_model(self, state: AgentState, runtime: Runtime) -> dict[str, Any] | None:
+        if len(state["messages"]) == self.max_messages:
+            return {
+                "messages": [AIMessage("Conversation limit reached.")],
+                "jump_to": "end"
+            }
+        return None
+```
+
+
+
+
+#### Wrap-style hooks
+
+Intercept execution and control when the handler is called:
+
+- `wrap_model_call` - Around each model call
+- `wrap_tool_call` - Around each tool call
+
+
+
+
+You decide if the handler is called zero times (short-circuit), once (normal flow), or multiple times (retry logic).
+
+**Example: Model retry middleware**
+
+```python
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from typing import Callable
+
+class RetryMiddleware(AgentMiddleware):
+    def __init__(self, max_retries: int = 3):
+        super().__init__()
+        self.max_retries = max_retries
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        for attempt in range(self.max_retries):
+            try:
+                return handler(request)
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                print(f"Retry {attempt + 1}/{self.max_retries} after error: {e}")
+```
+
+
+
+
+**Example: Dynamic model selection**
+
+```python
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from langchain.chat_models import init_chat_model
+from typing import Callable
+
+class DynamicModelMiddleware(AgentMiddleware):
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        # Use different model based on conversation length
+        if len(request.messages) > 10:
+            request.model = init_chat_model("openai:gpt-4o")
+        else:
+            request.model = init_chat_model("openai:gpt-4o-mini")
+
+        return handler(request)
+```
+
+
+
+
+**Example: Tool call monitoring**
+
+```python
+from langchain.tools.tool_node import ToolCallRequest
+from langchain.agents.middleware import AgentMiddleware
+from langchain_core.messages import ToolMessage
+from langgraph.types import Command
+from typing import Callable
+
+class ToolMonitoringMiddleware(AgentMiddleware):
+    def wrap_tool_call(
+        self,
+        request: ToolCallRequest,
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+    ) -> ToolMessage | Command:
+        print(f"Executing tool: {request.tool_call['name']}")
+        print(f"Arguments: {request.tool_call['args']}")
+
+        try:
+            result = handler(request)
+            print(f"Tool completed successfully")
+            return result
+        except Exception as e:
+            print(f"Tool failed: {e}")
+            raise
+```
+
+
+
+
+### Custom state schema
+
+Middleware can extend the agent's state with custom properties. Define a custom state type and set it as the `state_schema`:
+
+```python
+from langchain.agents.middleware import AgentState, AgentMiddleware
+from typing_extensions import NotRequired
+from typing import Any
+
+class CustomState(AgentState):
+    model_call_count: NotRequired[int]
+    user_id: NotRequired[str]
+
+class CallCounterMiddleware(AgentMiddleware[CustomState]):
+    state_schema = CustomState
+
+    def before_model(self, state: CustomState, runtime) -> dict[str, Any] | None:
+        # Access custom state properties
+        count = state.get("model_call_count", 0)
+
+        if count > 10:
+            return {"jump_to": "end"}
+
+        return None
+
+    def after_model(self, state: CustomState, runtime) -> dict[str, Any] | None:
+        # Update custom state
+        return {"model_call_count": state.get("model_call_count", 0) + 1}
+```
+
+
+
+
+```python
+agent = create_agent(
+    model="openai:gpt-4o",
+    middleware=[CallCounterMiddleware()],
+    tools=[...],
+)
+
+# Invoke with custom state
+result = agent.invoke({
+    "messages": [HumanMessage("Hello")],
+    "model_call_count": 0,
+    "user_id": "user-123",
+})
+```
+
+
+
+
+
+
+
+### Execution order
+
+When using multiple middleware, understanding execution order is important:
+
+```python
+agent = create_agent(
+    model="openai:gpt-4o",
+    middleware=[middleware1, middleware2, middleware3],
+    tools=[...],
+)
+```
+
+
+
+
+<Accordion title="Execution flow (click to expand)">
+
+**Before hooks run in order:**
+
+1. `middleware1.before_agent()`
+2. `middleware2.before_agent()`
+3. `middleware3.before_agent()`
+
+__Agent loop starts__
+
+5. `middleware1.before_model()`
+6. `middleware2.before_model()`
+7. `middleware3.before_model()`
+
+**Wrap hooks nest like function calls:**
+
+8. `middleware1.wrap_model_call()` → `middleware2.wrap_model_call()` → `middleware3.wrap_model_call()` → model
+
+**After hooks run in reverse order:**
+
+9. `middleware3.after_model()`
+10. `middleware2.after_model()`
+11. `middleware1.after_model()`
+
+__Agent loop ends__
+
+13. `middleware3.after_agent()`
+14. `middleware2.after_agent()`
+15. `middleware1.after_agent()`
+
+</Accordion>
+
+**Key rules:**
+- `before_*` hooks: First to last
+- `after_*` hooks: Last to first (reverse)
+- `wrap_*` hooks: Nested (first middleware wraps all others)
+
+### Agent jumps
+
+To exit early from middleware, return a dictionary with `jump_to`:
+
+```python
+class EarlyExitMiddleware(AgentMiddleware):
+    def before_model(self, state: AgentState, runtime) -> dict[str, Any] | None:
+        # Check some condition
+        if should_exit(state):
+            return {
+                "messages": [AIMessage("Exiting early due to condition.")],
+                "jump_to": "end"
+            }
+        return None
+```
+
+
+
+
+Available jump targets:
+
+- `"end"`: Jump to the end of the agent execution
+- `"tools"`: Jump to the tools node
+- `"model"`: Jump to the model node (or the first `before_model` hook)
+
+**Important:** When jumping from `before_model` or `after_model`, jumping to `"model"` will cause all `before_model` middleware to run again.
+
+To enable jumping, decorate your hook with `@hook_config(can_jump_to=[...])`:
+
+```python
+from langchain.agents.middleware import AgentMiddleware, hook_config
+from typing import Any
+
+class ConditionalMiddleware(AgentMiddleware):
+    @hook_config(can_jump_to=["end", "tools"])
+    def after_model(self, state: AgentState, runtime) -> dict[str, Any] | None:
+        if some_condition(state):
+            return {"jump_to": "end"}
+        return None
+```
+
+
+
+
+### Best practices
+
+1. Keep middleware focused - each should do one thing well
+2. Handle errors gracefully - don't let middleware errors crash the agent
+3. **Use appropriate hook types**:
+    - Node-style for sequential logic (logging, validation)
+    - Wrap-style for control flow (retry, fallback, caching)
+4. Clearly document any custom state properties
+5. Unit test middleware independently before integrating
+6. Consider execution order - place critical middleware first in the list
+7. Use built-in middleware when possible, don't reinvent the wheel :)
+
+## Examples
+
+### Dynamically selecting tools
+
+Select relevant tools at runtime to improve performance and accuracy.
+
+<Tip>
+**Benefits:**
+- **Shorter prompts** - Reduce complexity by exposing only relevant tools
+- **Better accuracy** - Models choose correctly from fewer options
+- **Permission control** - Dynamically filter tools based on user access
+</Tip>
+
+```python
+from langchain.agents import create_agent
+from langchain.agents.middleware import AgentMiddleware, ModelRequest
+from typing import Callable
+
+
+class ToolSelectorMiddleware(AgentMiddleware):
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        """Middleware to select relevant tools based on state/context."""
+        # Select a small, relevant subset of tools based on state/context
+        relevant_tools = select_relevant_tools(request.state, request.runtime)
+        request.tools = relevant_tools
+        return handler(request)
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=all_tools,  # All available tools need to be registered upfront
+    # Middleware can be used to select a smaller subset that's relevant for the given run.
+    middleware=[ToolSelectorMiddleware()],
+)
+```
+
+
+
+
+<Expandable title="Extended example: GitHub vs GitLab tool selection">
+
+```python
+from dataclasses import dataclass
+from typing import Literal, Callable
+
+from langchain.agents import create_agent
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from langchain_core.tools import tool
+
+
+@tool
+def github_create_issue(repo: str, title: str) -> dict:
+    """Create an issue in a GitHub repository."""
+    return {"url": f"https://github.com/{repo}/issues/1", "title": title}
+
+@tool
+def gitlab_create_issue(project: str, title: str) -> dict:
+    """Create an issue in a GitLab project."""
+    return {"url": f"https://gitlab.com/{project}/-/issues/1", "title": title}
+
+all_tools = [github_create_issue, gitlab_create_issue]
+
+@dataclass
+class Context:
+    provider: Literal["github", "gitlab"]
+
+class ToolSelectorMiddleware(AgentMiddleware):
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        """Select tools based on the VCS provider."""
+        provider = request.runtime.context.provider
+
+        if provider == "gitlab":
+            selected_tools = [t for t in request.tools if t.name == "gitlab_create_issue"]
+        else:
+            selected_tools = [t for t in request.tools if t.name == "github_create_issue"]
+
+        request.tools = selected_tools
+        return handler(request)
+
+agent = create_agent(
+    model="openai:gpt-4o",
+    tools=all_tools,
+    middleware=[ToolSelectorMiddleware()],
+    context_schema=Context,
+)
+
+# Invoke with GitHub context
+agent.invoke(
+    {
+        "messages": [{"role": "user", "content": "Open an issue titled 'Bug: where are the cats' in the repository `its-a-cats-game`"}]
+    },
+    context=Context(provider="github"),
+)
+```
+
+
+
+
+**Key points:**
+- Register all tools upfront
+- Middleware selects the relevant subset per request
+- Use `context_schema` for configuration requirements
+
+
+
+
+</Expandable>
+
+## Additional resources
+
+- [Middleware API reference](https://reference.langchain.com/python/langchain/middleware/) - Complete guide to custom middleware
+- [Human-in-the-loop](/oss/python/langchain/human-in-the-loop) - Add human review for sensitive operations
+- [Testing agents](/oss/python/langchain/test) - Strategies for testing safety mechanisms
+
+---
+
+<Callout icon="pen-to-square" iconType="regular">
+    [Edit the source of this page on GitHub.](https://github.com/langchain-ai/docs/edit/main/src/oss/langchain/middleware.mdx)
+</Callout>
+<Tip icon="terminal" iconType="regular">
+    [Connect these docs programmatically](/use-these-docs) to Claude, VSCode, and more via MCP for    real-time answers.
+</Tip>
