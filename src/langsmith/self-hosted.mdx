@@ -1,6 +1,7 @@
 ---
 title: Self-hosted LangSmith
 sidebarTitle: Overview
+mode: wide
 ---
 
 <Note>
@@ -8,9 +9,11 @@ sidebarTitle: Overview
 Self-hosted LangSmith is an add-on to the Enterprise plan designed for our largest, most security-conscious customers. For more details, refer to [Pricing](https://www.langchain.com/pricing). [Contact our sales team](https://www.langchain.com/contact-sales) if you want to get a license key to trial LangSmith in your environment.
 </Note>
 
-LangSmith supports different self-hosted configurations depending on your scale, security, and infrastructure needs. You can use the **full platform** with LangSmith for observability, evaluation, prompt engineering, and deployment. Or, you can use LangSmith for observability, tracing, and evaluation without agent deployment. Alternatively, you can deploy agents directly without the control plane.
+LangSmith supports different self-hosted configurations depending on your scale, security, and infrastructure needs.
 
-This page provides an overview of the supported self-hosted models:
+You can use LangSmith for [observability](/langsmith/observability) and [evaluation](/langsmith/evaluation) without agent deployment. Or, you can set up the **full self-hosted platform** for observability, evaluation, and [agent deployment](/langsmith/deployments). Alternatively, you can deploy agents directly without the [control plane](/langsmith/control-plane).
+
+This page provides an overview of each self-hosted model:
 
 <Columns cols={1}>
   <Card
@@ -40,8 +43,8 @@ This page provides an overview of the supported self-hosted models:
 
 Model | Includes | Best for | Methods
 ------------------|------------------|----------|--------------------
-**LangSmith** | <ul><li>LangSmith (UI + API)</li><li>Backend services (queue, playground, ACE)</li><li>Datastores: PostgreSQL, Redis, ClickHouse, optional blob storage</li></ul> | <ul><li>Teams who need self-hosted observability, tracing, and evaluation</li><li>Running LangSmith without deploying agents/graphs</li></ul> | <ul><li>Docker Compose (dev/test)</li><li>Kubernetes + Helm (production)</li></ul>
-**LangSmith Deployment** | <ul><li>Everything from LangSmith</li><li>Control plane (deployments UI, revision management, Studio)</li><li>Data plane (LangGraph Server pods)</li><li>Kubernetes operator for orchestration</li></ul> | <ul><li>Enterprise teams needing a private LangChain Cloud</li><li>Centralized UI/API for managing multiple agents/graphs</li><li>Integrated observability and orchestration</li></ul> | <ul><li>Kubernetes with Helm (required)</li><li>Runs on EKS, GKE, AKS, or self-managed clusters</li></ul>
+**Observability & Evaluation** | <ul><li>LangSmith (UI + API)</li><li>Backend services (queue, playground, ACE)</li><li>Datastores: PostgreSQL, Redis, ClickHouse, optional blob storage</li></ul> | <ul><li>Teams who need self-hosted observability, tracing, and evaluation</li><li>Running LangSmith without deploying agents/graphs</li></ul> | <ul><li>Docker Compose (dev/test)</li><li>Kubernetes + Helm (production)</li></ul>
+**Observability, Evaluation & Deployment** | <ul><li>Everything from Observability and Evaluation</li><li>Control plane (deployments UI, revision management, Studio)</li><li>Data plane (LangGraph Server pods)</li><li>Kubernetes operator for orchestration</li></ul> | <ul><li>Enterprise teams needing a private LangChain Cloud</li><li>Centralized UI/API for managing multiple agents/graphs</li><li>Integrated observability and orchestration</li></ul> | <ul><li>Kubernetes with Helm (required)</li><li>Runs on EKS, GKE, AKS, or self-managed clusters</li></ul>
 **Standalone server** | <ul><li>LangGraph Server container(s)</li><li>Requires PostgreSQL + Redis (shared or dedicated)</li><li>Optional LangSmith integration for tracing</li></ul> | <ul><li>Lightweight deployments of one or a few agents</li><li>Integrating LangGraph Servers as microservices</li><li>Teams preferring to manage scaling & CI/CD themselves</li></ul> | <ul><li>Docker / Docker Compose (dev/test)</li><li>Kubernetes + Helm (production)</li><li>Any container runtime or VM (ECS, EC2, ACI, etc.)</li></ul>
 
 <Note>
