@@ -877,8 +877,15 @@
                       "langsmith/data-purging-compliance"
                     ]
                   },
+                  {
+                    "group": "Access control & Authentication",
+                    "pages": [
+                      "langsmith/workspace-operations",
+                      "langsmith/rbac",
+                      "langsmith/authentication-methods"
+                    ]
+                  },
                   "langsmith/scalability-and-resilience",
-                  "langsmith/authentication-methods",
                   "langsmith/faq",
                   "langsmith/regions-faq",
                   "langsmith/pricing-faq"
