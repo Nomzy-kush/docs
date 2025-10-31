@@ -1312,12 +1312,12 @@
             ]
           },
           {
-            "tab": "Hosting",
+            "tab": "Platform setup",
             "groups": [
               {
                 "group": "Overview",
                 "pages": [
-                  "langsmith/hosting",
+                  "langsmith/platform-setup",
                   "langsmith/cloud"
                 ]
               },
@@ -1344,7 +1344,6 @@
                         ]
                       },
                       "langsmith/deploy-self-hosted-full-platform",
-                      "langsmith/deploy-standalone-server",
                       {
                         "group": "Manage an installation",
                         "pages": [
@@ -1434,6 +1433,10 @@
     {
       "source": "/langsmith/reference-overview",
       "destination": "/langsmith/home"
+    },
+    {
+      "source": "/langsmith/hosting",
+      "destination": "/langsmith/platform-setup"
     },
     {
       "source": "/oss/python/langchain-agents",
