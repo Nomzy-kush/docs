@@ -5,15 +5,30 @@ sidebarTitle: Slack installation
 mode: wide
 ---
 
-Install the LangSmith Agent Builder Slack app to enable your agents to interact with your Slack workspace.
+The LangSmith Agent Builder Slack app enables your agents to interact with your Slack workspace.
 
-## Installation
+## How to install
 
-Click the button below to add the LangSmith Agent Builder to your Slack workspace:
+To install the LangSmith Agent Builder for Slack:
 
-<a href="https://slack.com/oauth/v2/authorize?client_id=YOUR_CLIENT_ID&scope=YOUR_SCOPES">
-  <img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcSet="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
-</a>
+1. Navigate to Agent Builder in your [LangSmith workspace](https://smith.langchain.com)
+2. Create or edit an agent
+3. Add Slack as a trigger or enable Slack tools
+4. When prompted, authorize the Slack connection
+5. Follow the OAuth flow to grant permissions to your Slack workspace
+
+The app will be installed automatically when you complete the authorization.
+
+## Permissions
+
+The LangSmith Agent Builder requires the following permissions:
+
+- **Send messages** - Send direct messages and post to channels
+- **Read messages** - Read channel history and thread messages
+- **View channels** - Access basic channel information
+- **View users** - Look up user information for messaging
+
+These permissions enable agents to communicate effectively within your workspace.
 
 ## What you can do
 
@@ -27,11 +42,10 @@ Once installed, the LangSmith Agent Builder can:
 
 ## Getting started
 
-After installation, configure your agent in LangSmith:
+After installation, configure your agent:
 
-1. Navigate to Agent Builder in your [LangSmith workspace](https://smith.langchain.com)
-2. Create or edit an agent
-3. Add Slack as a trigger or enable Slack tools
-4. Authorize the connection when prompted
+1. Set up Slack as a trigger to activate your agent when messages are received
+2. Enable Slack tools to allow your agent to send messages
+3. Configure which channels or users your agent should monitor
 
 For full setup instructions, see the [Agent Builder documentation](/langsmith/agent-builder).
