@@ -3,7 +3,7 @@ title: LangGraph CLI
 sidebarTitle: LangGraph CLI
 ---
 
-**LangGraph CLI** is a command-line tool for building and running the [LangGraph API server](/langsmith/langgraph-server) locally. The resulting server exposes all API endpoints for runs, threads, assistants, etc., and includes supporting services such as a managed database for checkpointing and storage.
+**LangGraph CLI** is a command-line tool for building and running the [Agent Server](/langsmith/agent-server) locally. The resulting server exposes all API endpoints for runs, threads, assistants, etc., and includes supporting services such as a managed database for checkpointing and storage.
 
 ## Installation
 
@@ -306,7 +306,7 @@ To build and run a valid application, the LangGraph CLI requires a JSON configur
 
     _(Added in v0.3.7)_
 
-    You can pin the API version of the LangGraph server by using the `api_version` key. This is useful if you want to ensure that your server uses a specific version of the API.
+    You can pin the API version of the Agent Server by using the `api_version` key. This is useful if you want to ensure that your server uses a specific version of the API.
     By default, builds in Cloud deployments use the latest stable version of the server. This can be pinned by setting the `api_version` key to a specific version.
 
     ```json
@@ -339,7 +339,7 @@ To build and run a valid application, the LangGraph CLI requires a JSON configur
 
     _(Added in v0.3.7)_
 
-    You can pin the API version of the LangGraph server by using the `api_version` key. This is useful if you want to ensure that your server uses a specific version of the API.
+    You can pin the API version of the Agent Server by using the `api_version` key. This is useful if you want to ensure that your server uses a specific version of the API.
     By default, builds in Cloud deployments use the latest stable version of the server. This can be pinned by setting the `api_version` key to a specific version.
 
     ```json
