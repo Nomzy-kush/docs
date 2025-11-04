@@ -131,7 +131,7 @@ See [Available commands](#available-commands) for more details.
 > * **Only edit files in `src/`** - The `build/` directory is automatically generated
 > * **Use Mintlify syntax** - See [Mintlify documentation](https://mintlify.com/docs) for formatting guidelines
 
-1. Ensure your dev environment is set up as described above and that you have followed the steps in [IDE_SETUP.md](./IDE_SETUP.md) to configure your IDE/editor to automatically apply the correct settings.
+1. Ensure your [dev environment is set up](#set-up-local-dev-environment) and that you have followed the steps in [IDE_SETUP.md](./IDE_SETUP.md) to configure your IDE/editor to automatically apply the correct settings.
 
 2. Start development mode:
 
