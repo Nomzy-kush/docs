@@ -12,4 +12,4 @@ Integration tests for LangChain components help ensure that your implementations
 - [Base classes](./base.md)
 
 !!! tip "Docs"
-    See more details in the [standard tests documentation](https://docs.langchain.com/oss/javascript/contributing/standard-tests-langchain).
+    See more details in the [standard tests documentation](https://docs.langchain.com/oss/python/contributing/standard-tests-langchain).
