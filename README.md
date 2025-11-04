@@ -180,7 +180,7 @@ This will generate two outputs (one for each language) at `/oss/python/concepts/
 > [!IMPORTANT]
 > Currently, the LangChain documentation is only available in English, but we are working to add support for other languages, thanks to our LangChain Ambassadors!
 
-Localized content is content that is specific to a specific language. When adding localized content, add content in the specific language directory. The directory name is the language code. See the [Mintlify documentation](https://www.mintlify.com/docs/organize/navigation#languages) for more details on localized content.
+To add localized content (content in a specific language), place it in the corresponding language directory. Each language has its own directory named after its language code. For more information, refer to the [Mintlify documentation](https://www.mintlify.com/docs/organize/navigation#languages) for more details on localized content.
 
 ```text
 src/
