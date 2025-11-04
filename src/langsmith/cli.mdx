@@ -277,7 +277,7 @@ To build and run a valid application, the LangGraph CLI requires a JSON configur
 
     The `checkpointer.serde` object shapes deserialization:
 
-    * `allowed_json_modules` defines an allow list for custom python objects you want the server to be able to deserialize from payloads saved in "json" mode. This is a list of `[path, to, module, file, symbol]` sequences. If omitted, only LangChain-safe defaults are allowed. You can unsafely set to `true` to allow any module to be deserialized.
+    * `allowed_json_modules` defines an allow list for custom Python objects you want the server to be able to deserialize from payloads saved in "json" mode. This is a list of `[path, to, module, file, symbol]` sequences. If omitted, only LangChain-safe defaults are allowed. You can unsafely set to `true` to allow any module to be deserialized.
     * `pickle_fallback`: Whether to fall back to pickle deserialization when JSON decoding fails.
 
     ```json
