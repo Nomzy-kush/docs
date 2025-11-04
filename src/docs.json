@@ -1420,6 +1420,49 @@
             ]
           }
         ]
+      },
+      {
+        "language": "ko",
+        "products": [
+          {
+            "product": "Home",
+            "icon": "house",
+            "pages": [
+              "ko/index"
+            ]
+          },
+          {
+            "product": "LangChain + LangGraph",
+            "icon": "link",
+            "description": "Open source frameworks",
+            "dropdowns": [
+              {
+                "dropdown": "Python",
+                "icon": "python",
+                "tabs": [
+                  {
+                    "tab": "LangChain",
+                    "pages": [
+                      "ko/oss/python/langchain/overview"
+                    ]
+                  }
+                ]
+              },
+              {
+                "dropdown": "JavaScript",
+                "icon": "square-js",
+                "tabs": [
+                  {
+                    "tab": "LangChain",
+                    "pages": [
+                      "ko/oss/javascript/langchain/overview"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

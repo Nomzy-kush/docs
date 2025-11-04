@@ -95,6 +95,10 @@ class DocumentationBuilder:
         logger.info("Building LangSmith content...")
         self._build_unversioned_content("langsmith", "langsmith")
 
+        # Build localized content directories (ko/, cn/, es/, zh-Hant/)
+        logger.info("Building localized content...")
+        self._build_localized_content()
+
         # Copy shared files (docs.json, images, etc.)
         logger.info("Copying shared files...")
         self._copy_shared_files()
@@ -635,6 +639,21 @@ class DocumentationBuilder:
             copied_count,
             skipped_count,
         )
+
+    def _build_localized_content(self) -> None:
+        """Build localized content directories (ko/, cn/, es/, zh-Hant/).
+
+        This method scans for localized content directories in src/ and copies them
+        to the build directory, maintaining the directory structure.
+        """
+        # Common language codes for localized content
+        localized_dirs = ["ko", "cn", "es", "zh-Hant", "ja", "de", "fr", "pt", "ru"]
+
+        for lang_code in localized_dirs:
+            src_path = self.src_dir / lang_code
+            if src_path.exists() and src_path.is_dir():
+                logger.info("Building %s/ content...", lang_code)
+                self._build_unversioned_content(lang_code, lang_code)
 
     def _build_single_file(
         self,
