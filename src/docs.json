@@ -880,8 +880,8 @@
                   {
                     "group": "Access control & Authentication",
                     "pages": [
-                      "langsmith/workspace-operations",
                       "langsmith/rbac",
+                      "langsmith/workspace-operations",
                       "langsmith/authentication-methods"
                     ]
                   },
