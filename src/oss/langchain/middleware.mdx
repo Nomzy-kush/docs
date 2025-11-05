@@ -493,7 +493,7 @@ Control agent execution by limiting the number of tool calls, either globally ac
 
 :::python
 
-You can limit tool calls globally across all tools, or for specific tools by setting `tool_name`. For each limit, specify one or both of:
+To limit tool calls globally across all tools or for specific tools, set `tool_name`. For each limit, specify one or both of:
 
 - **Thread limit** (`thread_limit`) - Max calls across all runs in a conversation. Persists across invocations. Requires a checkpointer.
 - **Run limit** (`run_limit`) - Max calls per single invocation. Resets each turn.
