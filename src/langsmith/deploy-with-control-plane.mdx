@@ -119,7 +119,7 @@ Starting from the LangSmith UI:
 
 ## Private registry authentication
 
-If your container registry requires authentication (e.g., AWS ECR, Azure ACR, private Docker registry), you must configure Kubernetes image pull secrets before deploying applications. This is a one-time infrastructure configuration.
+If your container registry requires authentication (e.g., AWS ECR, Azure ACR, GCP Artifact Registry, private Docker registry), you must configure Kubernetes image pull secrets before deploying applications. This is a one-time infrastructure configuration.
 
 <Note>
 **This configuration is done at the infrastructure level, not per-deployment.** Once configured, all deployments automatically inherit the registry credentials.
