@@ -645,6 +645,9 @@ class DocumentationBuilder:
 
         This method scans for localized content directories in src/ and copies them
         to the build directory, maintaining the directory structure.
+
+        If a localized directory contains an oss/ subdirectory, that content will be
+        versioned into python/ and javascript/ variants.
         """
         # Common language codes for localized content
         localized_dirs = ["ko", "cn", "es", "zh-Hant", "ja", "de", "fr", "pt", "ru"]
@@ -653,7 +656,152 @@ class DocumentationBuilder:
             src_path = self.src_dir / lang_code
             if src_path.exists() and src_path.is_dir():
                 logger.info("Building %s/ content...", lang_code)
-                self._build_unversioned_content(lang_code, lang_code)
+
+                # Check if this localized directory has an oss/ subdirectory
+                oss_path = src_path / "oss"
+                if oss_path.exists() and oss_path.is_dir():
+                    # Build versioned OSS content
+                    logger.info("Building %s/oss/ Python version...", lang_code)
+                    self._build_localized_oss_version(lang_code, "python")
+
+                    logger.info("Building %s/oss/ JavaScript version...", lang_code)
+                    self._build_localized_oss_version(lang_code, "js")
+
+                # Build non-oss content as unversioned
+                self._build_localized_non_oss_content(lang_code)
+
+    def _build_localized_oss_version(
+        self, lang_code: str, target_language: str
+    ) -> None:
+        """Build localized OSS content for a specific language version.
+
+        Args:
+            lang_code: Language code for the locale (e.g., "ko", "cn").
+            target_language: Target language for conditional blocks ("python" or "js").
+        """
+        oss_dir = self.src_dir / lang_code / "oss"
+        if not oss_dir.exists():
+            return
+
+        # Get all files in the localized oss directory
+        all_files = [
+            file_path
+            for file_path in oss_dir.rglob("*")
+            if file_path.is_file() and not self.is_shared_file(file_path)
+        ]
+
+        if not all_files:
+            logger.info("No files found in %s/oss/ directory", lang_code)
+            return
+
+        # Map target_language to directory name
+        # target_language is "python" or "js", but directory is "python" or "javascript"
+        lang_dir = self.language_url_names.get(target_language, target_language)
+
+        # Process files with progress bar
+        copied_count: int = 0
+        skipped_count: int = 0
+
+        with tqdm(
+            total=len(all_files),
+            desc=f"Building {lang_code}/oss/{lang_dir} files",
+            unit="file",
+            ncols=80,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        ) as pbar:
+            for file_path in all_files:
+                # Calculate relative path from oss/ directory
+                relative_path = file_path.relative_to(oss_dir)
+
+                # Build to {lang_code}/oss/{lang_dir}/ structure
+                output_path = (
+                    self.build_dir / lang_code / "oss" / lang_dir / relative_path
+                )
+
+                result = self._build_single_file(
+                    file_path,
+                    output_path,
+                    target_language,
+                    pbar,
+                    f"{lang_code}/oss/{lang_dir}/{relative_path}",
+                )
+                if result:
+                    copied_count += 1
+                else:
+                    skipped_count += 1
+                pbar.update(1)
+
+        logger.info(
+            "✅ %s/oss/%s complete: %d files copied, %d files skipped",
+            lang_code,
+            lang_dir,
+            copied_count,
+            skipped_count,
+        )
+
+    def _build_localized_non_oss_content(self, lang_code: str) -> None:
+        """Build non-OSS content for a localized directory.
+
+        Args:
+            lang_code: Language code for the locale (e.g., "ko", "cn").
+        """
+        src_path = self.src_dir / lang_code
+        if not src_path.exists():
+            return
+
+        # Get all files EXCEPT those in the oss/ subdirectory
+        all_files = []
+        for file_path in src_path.rglob("*"):
+            if file_path.is_file() and not self.is_shared_file(file_path):
+                # Skip files that are in the oss/ subdirectory
+                try:
+                    relative_to_lang = file_path.relative_to(src_path)
+                    if relative_to_lang.parts and relative_to_lang.parts[0] == "oss":
+                        continue
+                    all_files.append(file_path)
+                except ValueError:
+                    continue
+
+        if not all_files:
+            logger.info("No non-OSS files found in %s/ directory", lang_code)
+            return
+
+        # Process files with progress bar
+        copied_count: int = 0
+        skipped_count: int = 0
+
+        with tqdm(
+            total=len(all_files),
+            desc=f"Building {lang_code} non-OSS files",
+            unit="file",
+            ncols=80,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+        ) as pbar:
+            for file_path in all_files:
+                # Calculate relative path from lang directory
+                relative_path = file_path.relative_to(src_path)
+                # Build directly to {lang_code}/
+                output_path = self.build_dir / lang_code / relative_path
+
+                result = self._build_single_file(
+                    file_path,
+                    output_path,
+                    "python",  # Use python as default for non-OSS localized content
+                    pbar,
+                    f"{lang_code}/{relative_path}",
+                )
+                if result:
+                    copied_count += 1
+                else:
+                    skipped_count += 1
+                pbar.update(1)
+
+        logger.info(
+            "✅ %s non-OSS complete: %d files copied, %d files skipped",
+            lang_code,
+            copied_count,
+            skipped_count,
+        )
 
     def _build_single_file(
         self,
