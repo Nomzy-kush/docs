@@ -491,107 +491,80 @@ Control agent execution by limiting the number of tool calls, either globally ac
 - Protecting against runaway agent loops
 </Tip>
 
-#### Limit scope
+::: python
 
-You can configure limits in two ways:
+You can limit tool calls globally across all tools, or for specific tools by setting `tool_name`. For each limit, specify one or both of:
 
-1. **Global limit** - Applies to all tool calls (when `tool_name` is not specified)
-2. **Tool-specific limit** - Applies only to a specific tool (when `tool_name` is specified)
+- **Thread limit** (`thread_limit`) - Max calls across all runs in a conversation. Persists across invocations. Requires a checkpointer.
+- **Run limit** (`run_limit`) - Max calls per single invocation. Resets each turn.
 
-You can use both in the same agent to enforce different limits for different tools.
+:::
 
-#### Limit types
+::: js
 
-For each limit scope (global or tool-specific), you can specify two types of limits:
+You can limit tool calls globally across all tools, or for specific tools by setting `toolName`. For each limit, specify one or both of:
 
-1. **Thread limit** (`thread_limit`) - Maximum tool calls across all runs within a thread (conversation)
-   - Persists across multiple agent invocations with the same thread ID
-   - Useful for enforcing daily/session quotas
-   - Requires a checkpointer to track state across runs
+- **Thread limit** (`threadLimit`) - Max calls across all runs in a conversation. Persists across invocations. Requires a checkpointer.
+- **Run limit** (`runLimit`) - Max calls per single invocation. Resets each turn.
 
-2. **Run limit** (`run_limit`) - Maximum tool calls in a single agent invocation
-   - Resets with each new user message
-   - Useful for preventing loops in a single turn
-   - Works without a checkpointer
+:::
 
-You must specify at least one limit type (thread or run), but can specify both.
+**Exit behaviors:**
 
-#### Exit behaviors
-
-When a limit is reached, you can choose how the agent should respond:
-
-1. **`"continue"`** (default) - Most flexible approach
-   - Blocks only the exceeded tool calls with error messages
-   - Other tools and the agent continue executing normally
-   - The model sees the error messages and can adapt its strategy
-   - Best for: Most use cases where you want the agent to handle limits gracefully
-
-2. **`"error"`** - Strict enforcement
-   - Raises `ToolCallLimitExceededError` exception immediately
-   - Stops all execution when any limit is exceeded
-   - Best for: Critical limits that must never be exceeded
-
-3. **`"end"`** - Immediate termination
-   - Stops execution with ToolMessage + AI message for the exceeded call
-   - Only works when limiting a specific tool with no other pending tool calls
-   - Raises `NotImplementedError` if other tools have pending calls
-   - Best for: Single-tool scenarios where you want clean termination
+| Behavior | Effect | Best For |
+|----------|--------|----------|
+| **`"continue"`** (default) | Blocks exceeded calls with error messages, agent continues | Most use cases - agent handles limits gracefully |
+| **`"error"`** | Raises exception immediately | Complex workflows where you want to handle the limit error manually |
+| **`"end"`** | Stops with ToolMessage + AI message | Single-tool scenarios (errors if other tools pending) |
 
 :::python
 ```python
 from langchain.agents import create_agent
 from langchain.agents.middleware import ToolCallLimitMiddleware
 
-# Example 1: Global limit across all tools
-# - Max 20 tool calls total per thread (across multiple runs)
-# - Max 10 tool calls total per single run
-# - Default "continue" behavior: blocked calls return errors, agent keeps going
+# Global limit: max 20 calls per thread, 10 per run
 global_limiter = ToolCallLimitMiddleware(
     thread_limit=20,
     run_limit=10,
 )
 
-# Example 2: Specific tool limit with "continue" behavior
-# - Max 5 calls to "search" tool per thread
-# - Max 3 calls to "search" tool per run
-# - Blocked search calls return errors, but other tools can still be called
+# Tool-specific limit with default "continue" behavior
 search_limiter = ToolCallLimitMiddleware(
     tool_name="search",
     thread_limit=5,
     run_limit=3,
-    exit_behavior="continue",  # Explicit, but this is the default
 )
 
-# Example 3: Thread limit only (no per-run limit)
+# Thread limit only (no per-run limit)
 database_limiter = ToolCallLimitMiddleware(
     tool_name="query_database",
-    thread_limit=10,  # Max 10 database queries per conversation
+    thread_limit=10,
 )
 
-# Example 4: Run limit with "error" behavior
-# - Raises exception immediately when limit is exceeded
-# - Useful for critical operations that must be strictly limited
+# Strict enforcement with "error" behavior
 web_scraper_limiter = ToolCallLimitMiddleware(
     tool_name="scrape_webpage",
-    run_limit=2,  # Max 2 web scrapes per turn
-    exit_behavior="error",  # Strict enforcement
+    run_limit=2,
+    exit_behavior="error",
 )
 
-# Example 5: "end" behavior (single tool only)
-# - Stops immediately when limit is exceeded
-# - Only works when this is the only tool being called
-# - Raises NotImplementedError if other tools have pending calls
+# Immediate termination with "end" behavior
 critical_tool_limiter = ToolCallLimitMiddleware(
     tool_name="delete_records",
     run_limit=1,
-    exit_behavior="end",  # Stop immediately after one call
+    exit_behavior="end",
 )
 
 # Use multiple limiters together
 agent = create_agent(
     model="gpt-4o",
     tools=[search_tool, database_tool, scraper_tool],
-    middleware=[global_limiter, search_limiter, database_limiter, web_scraper_limiter],
+    middleware=[
+        global_limiter,
+        search_limiter,
+        database_limiter,
+        web_scraper_limiter
+    ],
 )
 ```
 :::
@@ -600,49 +573,37 @@ agent = create_agent(
 ```typescript
 import { createAgent, toolCallLimitMiddleware } from "langchain";
 
-// Example 1: Global limit across all tools
-// - Max 20 tool calls total per thread (across multiple runs)
-// - Max 10 tool calls total per single run
-// - Default "continue" behavior: blocked calls return errors, agent keeps going
+// Global limit: max 20 calls per thread, 10 per run
 const globalLimiter = toolCallLimitMiddleware({
   threadLimit: 20,
   runLimit: 10,
 });
 
-// Example 2: Specific tool limit with "continue" behavior
-// - Max 5 calls to "search" tool per thread
-// - Max 3 calls to "search" tool per run
-// - Blocked search calls return errors, but other tools can still be called
+// Tool-specific limit with default "continue" behavior
 const searchLimiter = toolCallLimitMiddleware({
   toolName: "search",
   threadLimit: 5,
   runLimit: 3,
-  exitBehavior: "continue", // Explicit, but this is the default
 });
 
-// Example 3: Thread limit only (no per-run limit)
+// Thread limit only (no per-run limit)
 const databaseLimiter = toolCallLimitMiddleware({
   toolName: "query_database",
-  threadLimit: 10, // Max 10 database queries per conversation
+  threadLimit: 10,
 });
 
-// Example 4: Run limit with "error" behavior
-// - Throws exception immediately when limit is exceeded
-// - Useful for critical operations that must be strictly limited
+// Strict enforcement with "error" behavior
 const webScraperLimiter = toolCallLimitMiddleware({
   toolName: "scrape_webpage",
-  runLimit: 2, // Max 2 web scrapes per turn
-  exitBehavior: "error", // Strict enforcement
+  runLimit: 2,
+  exitBehavior: "error",
 });
 
-// Example 5: "end" behavior (single tool only)
-// - Stops immediately when limit is exceeded
-// - Only works when this is the only tool being called
-// - Throws error if other tools have pending calls
+// Immediate termination with "end" behavior
 const criticalToolLimiter = toolCallLimitMiddleware({
   toolName: "delete_records",
   runLimit: 1,
-  exitBehavior: "end", // Stop immediately after one call
+  exitBehavior: "end",
 });
 
 // Use multiple limiters together
