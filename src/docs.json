@@ -1422,6 +1422,49 @@
         ]
       },
       {
+        "language": "cn",
+        "products": [
+          {
+            "product": "Home",
+            "icon": "house",
+            "pages": [
+              "cn/index"
+            ]
+          },
+          {
+            "product": "LangChain + LangGraph",
+            "icon": "link",
+            "description": "Open source frameworks",
+            "dropdowns": [
+              {
+                "dropdown": "Python",
+                "icon": "python",
+                "tabs": [
+                  {
+                    "tab": "LangChain",
+                    "pages": [
+                      "cn/oss/python/langchain/overview"
+                    ]
+                  }
+                ]
+              },
+              {
+                "dropdown": "JavaScript",
+                "icon": "square-js",
+                "tabs": [
+                  {
+                    "tab": "LangChain",
+                    "pages": [
+                      "cn/oss/javascript/langchain/overview"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
         "language": "ko",
         "products": [
           {
