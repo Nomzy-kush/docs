@@ -869,7 +869,7 @@
                       {
                         "group": "Releases & changelogs",
                         "pages": [
-                          "langsmith/langgraph-server-changelog",
+                          "langsmith/agent-server-changelog",
                           "langsmith/release-versions"
                         ]
                       },
@@ -1191,7 +1191,7 @@
                           "group": "Deployment components",
                           "pages": [
                             "langsmith/components",
-                            "langsmith/langgraph-server",
+                            "langsmith/agent-server",
                             "langsmith/data-plane",
                             "langsmith/control-plane"
                           ]
