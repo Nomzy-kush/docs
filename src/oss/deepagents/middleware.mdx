@@ -16,11 +16,17 @@ Middleware is composable—you can add as many or as few middleware to an agent 
 
 The following sections explain what each middleware provides.
 
-## Planning middleware
+## Todo list middleware
 
-Planning is integral to solving complex problems. If you've used Claude Code recently, you'll notice how it writes out a to-do list before tackling complex, multi-part tasks. You'll also notice how it can adapt and update this to-do list on the fly as more information comes in.
+Effective agents, like effective humans, benefit from writing down and tracking their tasks. If you've used Claude Code recently, you'll notice how it writes out a todo list before tackling complex, multi-part tasks. You'll also notice how it can adapt and update this todo list on the fly as more information comes in.
 
-`TodoListMiddleware` provides your agent with a tool specifically for updating this to-do list. Before and while it executes a multi-part task, the agent is prompted to use the `write_todos` tool to keep track of what it's doing and what still needs to be done.
+`TodoListMiddleware` provides your agent with a tool specifically for managing this todo list. Just as humans are more effective when they break down complex problems into actionable steps, agents equipped with todo lists can:
+- Break down complex problems into manageable steps
+- Track progress and adapt plans as new information emerges
+- Provide transparency into their reasoning and workflow
+- Avoid missing critical steps in multi-part tasks
+
+Before and while it executes a multi-part task, the agent is prompted to use the `write_todos` tool to keep track of what it's doing and what still needs to be done.
 
 :::python
 ```python
