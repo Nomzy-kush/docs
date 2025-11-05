@@ -434,7 +434,7 @@ nav:
     - Deep Agents reference: deepagents/index.md
   - Integrations:
     - LangChain integrations: integrations/index.md
-    - Community: langchain_community/index.md
+    - Community: integrations/langchain_community/index.md
     - Packages:
       - Anthropic:
         - integrations/langchain_anthropic/index.md
