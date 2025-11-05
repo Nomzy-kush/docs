@@ -18,13 +18,7 @@ The following sections explain what each middleware provides.
 
 ## Todo list middleware
 
-Effective agents, like effective humans, benefit from writing down and tracking their tasks. If you've used Claude Code recently, you'll notice how it writes out a todo list before tackling complex, multi-part tasks. You'll also notice how it can adapt and update this todo list on the fly as more information comes in.
-
-`TodoListMiddleware` provides your agent with a tool specifically for managing this todo list. Just as humans are more effective when they break down complex problems into actionable steps, agents equipped with todo lists can:
-- Break down complex problems into manageable steps
-- Track progress and adapt plans as new information emerges
-- Provide transparency into their reasoning and workflow
-- Avoid missing critical steps in multi-part tasks
+`TodoListMiddleware` provides your agent with a tool for managing todo lists. Just as humans are more effective when they break down complex problems into actionable steps, agents equipped with todo lists can track progress, adapt plans as information emerges, and provide transparency into their workflow.
 
 Before and while it executes a multi-part task, the agent is prompted to use the `write_todos` tool to keep track of what it's doing and what still needs to be done.
 
