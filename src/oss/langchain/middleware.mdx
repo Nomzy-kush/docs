@@ -481,35 +481,117 @@ const agent = createAgent({
 
 ### Tool call limit
 
-Limit the number of tool calls to specific tools or all tools.
+Control agent execution by limiting the number of tool calls, either globally across all tools or for specific tools.
 
 <Tip>
 **Perfect for:**
 - Preventing excessive calls to expensive external APIs
 - Limiting web searches or database queries
 - Enforcing rate limits on specific tool usage
+- Protecting against runaway agent loops
 </Tip>
+
+#### Limit scope
+
+You can configure limits in two ways:
+
+1. **Global limit** - Applies to all tool calls (when `tool_name` is not specified)
+2. **Tool-specific limit** - Applies only to a specific tool (when `tool_name` is specified)
+
+You can use both in the same agent to enforce different limits for different tools.
+
+#### Limit types
+
+For each limit scope (global or tool-specific), you can specify two types of limits:
+
+1. **Thread limit** (`thread_limit`) - Maximum tool calls across all runs within a thread (conversation)
+   - Persists across multiple agent invocations with the same thread ID
+   - Useful for enforcing daily/session quotas
+   - Requires a checkpointer to track state across runs
+
+2. **Run limit** (`run_limit`) - Maximum tool calls in a single agent invocation
+   - Resets with each new user message
+   - Useful for preventing loops in a single turn
+   - Works without a checkpointer
+
+You must specify at least one limit type (thread or run), but can specify both.
+
+#### Exit behaviors
+
+When a limit is reached, you can choose how the agent should respond:
+
+1. **`"continue"`** (default) - Most flexible approach
+   - Blocks only the exceeded tool calls with error messages
+   - Other tools and the agent continue executing normally
+   - The model sees the error messages and can adapt its strategy
+   - Best for: Most use cases where you want the agent to handle limits gracefully
+
+2. **`"error"`** - Strict enforcement
+   - Raises `ToolCallLimitExceededError` exception immediately
+   - Stops all execution when any limit is exceeded
+   - Best for: Critical limits that must never be exceeded
+
+3. **`"end"`** - Immediate termination
+   - Stops execution with ToolMessage + AI message for the exceeded call
+   - Only works when limiting a specific tool with no other pending tool calls
+   - Raises `NotImplementedError` if other tools have pending calls
+   - Best for: Single-tool scenarios where you want clean termination
 
 :::python
 ```python
 from langchain.agents import create_agent
 from langchain.agents.middleware import ToolCallLimitMiddleware
 
+# Example 1: Global limit across all tools
+# - Max 20 tool calls total per thread (across multiple runs)
+# - Max 10 tool calls total per single run
+# - Default "continue" behavior: blocked calls return errors, agent keeps going
+global_limiter = ToolCallLimitMiddleware(
+    thread_limit=20,
+    run_limit=10,
+)
 
-# Limit all tool calls
-global_limiter = ToolCallLimitMiddleware(thread_limit=20, run_limit=10)
-
-# Limit specific tool
+# Example 2: Specific tool limit with "continue" behavior
+# - Max 5 calls to "search" tool per thread
+# - Max 3 calls to "search" tool per run
+# - Blocked search calls return errors, but other tools can still be called
 search_limiter = ToolCallLimitMiddleware(
     tool_name="search",
     thread_limit=5,
     run_limit=3,
+    exit_behavior="continue",  # Explicit, but this is the default
 )
 
+# Example 3: Thread limit only (no per-run limit)
+database_limiter = ToolCallLimitMiddleware(
+    tool_name="query_database",
+    thread_limit=10,  # Max 10 database queries per conversation
+)
+
+# Example 4: Run limit with "error" behavior
+# - Raises exception immediately when limit is exceeded
+# - Useful for critical operations that must be strictly limited
+web_scraper_limiter = ToolCallLimitMiddleware(
+    tool_name="scrape_webpage",
+    run_limit=2,  # Max 2 web scrapes per turn
+    exit_behavior="error",  # Strict enforcement
+)
+
+# Example 5: "end" behavior (single tool only)
+# - Stops immediately when limit is exceeded
+# - Only works when this is the only tool being called
+# - Raises NotImplementedError if other tools have pending calls
+critical_tool_limiter = ToolCallLimitMiddleware(
+    tool_name="delete_records",
+    run_limit=1,
+    exit_behavior="end",  # Stop immediately after one call
+)
+
+# Use multiple limiters together
 agent = create_agent(
     model="gpt-4o",
-    tools=[...],
-    middleware=[global_limiter, search_limiter],
+    tools=[search_tool, database_tool, scraper_tool],
+    middleware=[global_limiter, search_limiter, database_limiter, web_scraper_limiter],
 )
 ```
 :::
@@ -518,20 +600,56 @@ agent = create_agent(
 ```typescript
 import { createAgent, toolCallLimitMiddleware } from "langchain";
 
-// Limit all tool calls
-const globalLimiter = toolCallLimitMiddleware({ threadLimit: 20, runLimit: 10 });
+// Example 1: Global limit across all tools
+// - Max 20 tool calls total per thread (across multiple runs)
+// - Max 10 tool calls total per single run
+// - Default "continue" behavior: blocked calls return errors, agent keeps going
+const globalLimiter = toolCallLimitMiddleware({
+  threadLimit: 20,
+  runLimit: 10,
+});
 
-// Limit specific tool
+// Example 2: Specific tool limit with "continue" behavior
+// - Max 5 calls to "search" tool per thread
+// - Max 3 calls to "search" tool per run
+// - Blocked search calls return errors, but other tools can still be called
 const searchLimiter = toolCallLimitMiddleware({
   toolName: "search",
   threadLimit: 5,
   runLimit: 3,
+  exitBehavior: "continue", // Explicit, but this is the default
 });
 
+// Example 3: Thread limit only (no per-run limit)
+const databaseLimiter = toolCallLimitMiddleware({
+  toolName: "query_database",
+  threadLimit: 10, // Max 10 database queries per conversation
+});
+
+// Example 4: Run limit with "error" behavior
+// - Throws exception immediately when limit is exceeded
+// - Useful for critical operations that must be strictly limited
+const webScraperLimiter = toolCallLimitMiddleware({
+  toolName: "scrape_webpage",
+  runLimit: 2, // Max 2 web scrapes per turn
+  exitBehavior: "error", // Strict enforcement
+});
+
+// Example 5: "end" behavior (single tool only)
+// - Stops immediately when limit is exceeded
+// - Only works when this is the only tool being called
+// - Throws error if other tools have pending calls
+const criticalToolLimiter = toolCallLimitMiddleware({
+  toolName: "delete_records",
+  runLimit: 1,
+  exitBehavior: "end", // Stop immediately after one call
+});
+
+// Use multiple limiters together
 const agent = createAgent({
   model: "gpt-4o",
-  tools: [...],
-  middleware: [globalLimiter, searchLimiter],
+  tools: [searchTool, databaseTool, scraperTool],
+  middleware: [globalLimiter, searchLimiter, databaseLimiter, webScraperLimiter],
 });
 ```
 :::
@@ -540,37 +658,47 @@ const agent = createAgent({
 
 :::python
 <ParamField body="tool_name" type="string">
-  Specific tool to limit. If not provided, limits apply to all tools.
+  Name of specific tool to limit. If not provided, limits apply to **all tools globally**.
 </ParamField>
 
 <ParamField body="thread_limit" type="number">
-  Maximum tool calls across all runs in a thread. Defaults to no limit.
+  Maximum tool calls across all runs in a thread (conversation). Persists across multiple invocations with the same thread ID. Requires a checkpointer to maintain state. `None` means no thread limit.
 </ParamField>
 
 <ParamField body="run_limit" type="number">
-  Maximum tool calls per single invocation. Defaults to no limit.
+  Maximum tool calls per single invocation (one user message → response cycle). Resets with each new user message. `None` means no run limit.
+
+  **Note:** At least one of `thread_limit` or `run_limit` must be specified.
 </ParamField>
 
-<ParamField body="exit_behavior" type="string" default="end">
-  Behavior when limit is reached. Options: `"end"` (graceful termination) or `"error"` (raise exception)
+<ParamField body="exit_behavior" type="string" default="continue">
+  Behavior when limit is reached:
+  - `"continue"` (default) - Block exceeded tool calls with error messages, let other tools and the model continue. The model decides when to end based on the error messages.
+  - `"error"` - Raise a `ToolCallLimitExceededError` exception, stopping execution immediately
+  - `"end"` - Stop execution immediately with a ToolMessage and AI message for the exceeded tool call. Only works when limiting a single tool; raises `NotImplementedError` if other tools have pending calls.
 </ParamField>
 :::
 
 :::js
 <ParamField body="toolName" type="string">
-  Specific tool to limit. If not provided, limits apply to all tools.
+  Name of specific tool to limit. If not provided, limits apply to **all tools globally**.
 </ParamField>
 
 <ParamField body="threadLimit" type="number">
-  Maximum tool calls across all runs in a thread. Defaults to no limit.
+  Maximum tool calls across all runs in a thread (conversation). Persists across multiple invocations with the same thread ID. Requires a checkpointer to maintain state. `undefined` means no thread limit.
 </ParamField>
 
 <ParamField body="runLimit" type="number">
-  Maximum tool calls per single invocation. Defaults to no limit.
+  Maximum tool calls per single invocation (one user message → response cycle). Resets with each new user message. `undefined` means no run limit.
+
+  **Note:** At least one of `threadLimit` or `runLimit` must be specified.
 </ParamField>
 
-<ParamField body="exitBehavior" type="string" default="end">
-  Behavior when limit is reached. Options: `"end"` (graceful termination) or `"error"` (throw exception)
+<ParamField body="exitBehavior" type="string" default="continue">
+  Behavior when limit is reached:
+  - `"continue"` (default) - Block exceeded tool calls with error messages, let other tools and the model continue. The model decides when to end based on the error messages.
+  - `"error"` - Throw a `ToolCallLimitExceededError` exception, stopping execution immediately
+  - `"end"` - Stop execution immediately with a ToolMessage and AI message for the exceeded tool call. Only works when limiting a single tool; throws error if other tools have pending calls.
 </ParamField>
 :::
 
