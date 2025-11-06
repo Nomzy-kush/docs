@@ -20,6 +20,8 @@ sidebarTitle: Context
 
     Runtime context can be used to optimize the LLM context. For example, you can use user metadata
     in the runtime context to fetch user preferences and feed them into the context window.
+
+    **Dependency injection**: Runtime context is a form of dependency injection, allowing you to provide dependencies (like database connections, user IDs, or API clients) to your tools and nodes at runtime rather than hardcoding them.
 </Tip>
 
 LangGraph provides three ways to manage context, which combines the mutability and lifetime dimensions:

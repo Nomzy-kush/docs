@@ -18,6 +18,10 @@ LangGraph exposes a @[`Runtime`] object with the following information:
 2. **Store**: a @[BaseStore] instance used for [long-term memory](/oss/langchain/long-term-memory)
 3. **Stream writer**: an object used for streaming information via the `"custom"` stream mode
 
+<Tip>
+Runtime context provides **dependency injection** for your tools and middleware. Instead of hardcoding values or using global state, you can inject runtime dependencies (like database connections, user IDs, or configuration) when invoking your agent. This makes your tools more testable, reusable, and flexible.
+</Tip>
+
 You can access the runtime information within [tools](#inside-tools) and [middleware](#inside-middleware).
 
 ## Access
