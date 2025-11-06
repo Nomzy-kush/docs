@@ -4,6 +4,7 @@ sidebarTitle: Role-based access control
 ---
 
 import OrgWorkspaceRole from '/snippets/langsmith/multi-workspace-org-roles.mdx';
+import PermissionReference from '/snippets/langsmith/permissions-reference.mdx';
 
 This reference explains LangSmith's Role-Based Access Control (RBAC) system for managing organization-level and workspace-level permissions.
 
@@ -51,16 +52,18 @@ In organizations limited to a single workspace, all users are [Organization Admi
 - `organization:read` - Read access to all organization information
 - `organization:pats:create` - Create organization-level [personal access tokens](/langsmith/administration-overview#personal-access-tokens-pats)
 
+<PermissionReference/>
+
 **Key Capabilities**:
-- Manage organization settings and branding
+- Manage [organization settings](/langsmith/set-up-a-workspace#set-up-an-organization) and branding
 - Configure [SSO and authentication methods](/langsmith/user-management#set-up-saml-sso-for-your-organization)
-- Manage billing and subscription plans
-- Create and delete workspaces
+- Manage [billing](/langsmith/billing) and subscription plans
+- Create and delete [workspaces](/langsmith/set-up-a-workspace)
 - Invite and remove organization members
 - Assign organization and workspace roles to members
-- Create and manage custom roles
+- Create and manage [custom roles](#custom-roles)
 - Configure RBAC and ABAC (Attribute-Based Access Control) policies (Note that ABAC is in private preview)
-- View organization usage and analytics
+- View organization [usage](/langsmith/administration-overview#usage-limits) and analytics
 
 For details on setting up and managing your organization, refer to the [Administration Overview](/langsmith/administration-overview#organizations).
 
@@ -72,10 +75,12 @@ For details on setting up and managing your organization, refer to the [Administ
 - `organization:read` - Read access to organization information
 - `organization:pats:create` - Create personal access tokens
 
+<PermissionReference/>
+
 **Key Capabilities**:
 - View organization members and workspaces
 - View organization settings (but not modify)
-- Create personal access tokens for API access
+- Create [personal access tokens](/langsmith/administration-overview#personal-access-tokens-pats) for API access
 - Join workspaces they're invited to
 
 **Restrictions**:
@@ -94,6 +99,8 @@ You can add an Organization User to a subset of workspaces and assigned workspac
 **Permissions**:
 - `organization:read` - Read access to organization information
 
+<PermissionReference/>
+
 **Key Capabilities**:
 - View organization members and workspaces
 - View organization settings
@@ -109,12 +116,12 @@ Workspace roles are part of the **Enterprise RBAC feature** and control what use
 
 | Role | Description |
 |------|-------------|
-| Workspace Admin | Full permissions for all resources and ability to manage workspace |
-| Workspace Editor | Full permissions for most resources, cannot manage workspace settings or delete certain resources |
-| Workspace Viewer | Read-only access to all workspace resources |
+| [Workspace Admin](#workspace-admin) | Full permissions for all resources and ability to manage workspace |
+| [Workspace Editor](#workspace-editor) | Full permissions for most resources, cannot manage workspace settings or delete certain resources |
+| [Workspace Viewer](#workspace-viewer) | Read-only access to all workspace resources |
 
 <Note>
-RBAC (Role-Based Access Control) is a feature that is only available to Enterprise customers. If you are interested in this feature, [contact our sales team](https://www.langchain.com/contact-sales). Other plans default to using the Admin role for all users.
+RBAC (Role-Based Access Control) is a feature that is only available to [Enterprise](https://langchain.com/pricing) customers. If you are interested in this feature, [contact our sales team](https://www.langchain.com/contact-sales). Other plans default to using the Admin role for all users.
 </Note>
 
 #### Workspace Admin
@@ -125,12 +132,14 @@ RBAC (Role-Based Access Control) is a feature that is only available to Enterpri
 - All create, read, update, delete, and share permissions for all resource types
 - Workspace management capabilities
 
+<PermissionReference/>
+
 #### Workspace Editor
 
-**Description**: Default role with full permissions for most resources. Cannot manage workspace settings or delete certain critical resources.
+**Description**: Role with full permissions for most resources. Cannot manage workspace settings or delete certain critical resources.
 
 **Key Differences from Admin**:
-- Cannot delete runs
+- Cannot delete [runs](/langsmith/observability#runs)
 - Cannot manage workspace settings (add/remove members, change workspace name, etc.)
 
 #### Workspace Viewer
@@ -138,6 +147,8 @@ RBAC (Role-Based Access Control) is a feature that is only available to Enterpri
 **Description**: Read-only access to all workspace resources.
 
 **Permissions**: Read-only access to all resource types.
+
+<PermissionReference/>
 
 <Tip>
 For step-by-step instructions on assigning workspace roles to users, refer to the [User Management guide](/langsmith/user-management#assign-a-role-to-a-user).
@@ -147,11 +158,11 @@ For step-by-step instructions on assigning workspace roles to users, refer to th
 
 <Info>Creating custom roles is available for organizations on the Enterprise plan.</Info>
 
-Organization Admins can create custom roles with specific combinations of permissions tailored to their organization's needs.
+[Organization Admins](#organization-admin) can create custom roles with specific combinations of permissions tailored to their organization's needs.
 
 ### Creating custom roles
 
-Custom roles are created at the organization level and can be assigned to users in any workspace within that organization.
+Custom roles are created at the [organization](/langsmith/administration-overview#organizations) level and can be assigned to users in any [workspace](/langsmith/administration-overview#workspaces) within that organization.
 
 **Steps**:
 1. Navigate to Organization **Settings** > **Roles**.
