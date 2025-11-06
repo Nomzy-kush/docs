@@ -3,7 +3,9 @@ title: Role-based access control
 sidebarTitle: Role-based access control
 ---
 
-This reference explains LangSmith's Role-Based Access Control (RBAC) system for managing workspace-level permissions.
+import OrgWorkspaceRole from '/snippets/langsmith/multi-workspace-org-roles.mdx';
+
+This reference explains LangSmith's Role-Based Access Control (RBAC) system for managing organization-level and workspace-level permissions.
 
 <Note>
 RBAC (Role-Based Access Control) is an Enterprise feature for managing workspace-level permissions. If you are interested in this feature, [contact our sales team](https://www.langchain.com/contact-sales). Other plans default to using the Admin role for all users.
@@ -11,8 +13,9 @@ RBAC (Role-Based Access Control) is an Enterprise feature for managing workspace
 
 LangSmith's RBAC system manages user permissions within workspaces. RBAC allows you to control who can access your LangSmith [workspace](/langsmith/administration-overview#workspaces) and what they can do within it.
 
-Each user has:
-- One [**organization role**](#organization-roles) that applies across the entire organization (separate from RBAC, available on all plans).
+In LangSmith, each user has:
+- One [**organization role**](#organization-roles) that applies across the entire organization (separate from workspace RBAC).
+    - <OrgWorkspaceRole/>
 - One [**workspace role**](#workspace-roles) per workspace they're a member of (requires Enterprise RBAC feature).
 
 On Enterprise plans, organizations can create [custom workspace roles](#custom-roles) with granular permission combinations.
@@ -20,45 +23,33 @@ On Enterprise plans, organizations can create [custom workspace roles](#custom-r
 To learn how to set up RBAC and assign roles to users, refer to the [User Management guide](/langsmith/user-management#set-up-access-control).
 
 <Note>
-For a comprehensive reference table of workspace-level and organization-level operations and which roles can perform them, refer to the [Workspace Operations Reference](/langsmith/workspace-operations).
+For a comprehensive reference table of workspace-level and organization-level operations and which roles can perform them, refer to the [Organization and workspace operations reference](/langsmith/permissions-reference).
 </Note>
 
 ## Role types
 
 ### Organization roles
 
-Organization roles are **distinct from the RBAC feature** and are used to manage organization-wide capabilities. These roles are available on all plans.
+Organization roles are **distinct from the workspace RBAC feature** and are used to manage organization-wide capabilities. The roles are system-defined and cannot be modified or extended. These roles are available in multi-workspace organizations on [Plus and Enterprise plans](https://langchain.com/pricing).
 
 | Role | Description |
 |------|-------------|
-| Organization Admin | Full permissions to manage organization configuration, users, billing, and workspaces |
-| Organization User | Read access to organization information and ability to create personal access tokens |
-| Organization Viewer | Read-only access to organization information |
+| [Organization Admin](#organization-admin) | Full permissions to manage organization configuration, users, billing, and workspaces |
+| [Organization User](#organization-user) | Read access to organization information and ability to create personal access tokens |
+| [Organization Viewer](#organization-viewer) | Read-only access to organization information |
 
-### Workspace roles
+<Note>
+In organizations limited to a single workspace, all users are [Organization Admins](#organization-admin).
+</Note>
 
-Workspace roles are part of the **Enterprise RBAC feature** and control what users can do with resources inside a workspace:
-
-| Role | Description |
-|------|-------------|
-| Workspace Admin | Full permissions for all resources and ability to manage workspace |
-| Workspace Editor | Full permissions for most resources, cannot manage workspace settings or delete certain resources |
-| Workspace Viewer | Read-only access to all workspace resources |
-
-## Organization roles
-
-<Info>
-Organization roles are **distinct from the RBAC feature** and are available on all plans. They control organization-wide capabilities and workspace membership. For more details, see the [Administration Overview](/langsmith/administration-overview#organization-roles).
-</Info>
-
-### Organization Admin
+#### Organization Admin
 
 **Description**: Full permissions to manage all organization configuration, users, billing, and workspaces.
 
 **Permissions**:
 - `organization:manage` - Full control over organization settings, SSO, security, billing
 - `organization:read` - Read access to all organization information
-- `organization:pats:create` - Create organization-level personal access tokens
+- `organization:pats:create` - Create organization-level [personal access tokens](/langsmith/administration-overview#personal-access-tokens-pats)
 
 **Key Capabilities**:
 - Manage organization settings and branding
@@ -68,13 +59,12 @@ Organization roles are **distinct from the RBAC feature** and are available on a
 - Invite and remove organization members
 - Assign organization and workspace roles to members
 - Create and manage custom roles
-- Configure RBAC and ABAC (Attribute-Based Access Control) policies
-- Manage organization-level API keys and service accounts
+- Configure RBAC and ABAC (Attribute-Based Access Control) policies (Note that ABAC is in private preview)
 - View organization usage and analytics
 
 For details on setting up and managing your organization, refer to the [Administration Overview](/langsmith/administration-overview#organizations).
 
-### Organization User
+#### Organization User
 
 **Description**: Read access to organization information and ability to create personal access tokens.
 
@@ -95,7 +85,9 @@ For details on setting up and managing your organization, refer to the [Administ
 - Cannot invite or remove organization members
 - Cannot manage roles or permissions
 
-### Organization Viewer
+You can add an Organization User to a subset of workspaces and assigned workspace roles (if RBAC is enabled), which specify permissions at the workspace level.
+
+#### Organization Viewer
 
 **Description**: Read-only access to organization information.
 
@@ -111,34 +103,37 @@ For details on setting up and managing your organization, refer to the [Administ
 - Cannot create personal access tokens
 - Cannot manage billing, workspaces, or members
 
-## Workspace roles
+### Workspace roles
+
+Workspace roles are part of the **Enterprise RBAC feature** and control what users can do with resources inside a workspace:
+
+| Role | Description |
+|------|-------------|
+| Workspace Admin | Full permissions for all resources and ability to manage workspace |
+| Workspace Editor | Full permissions for most resources, cannot manage workspace settings or delete certain resources |
+| Workspace Viewer | Read-only access to all workspace resources |
 
 <Note>
 RBAC (Role-Based Access Control) is a feature that is only available to Enterprise customers. If you are interested in this feature, [contact our sales team](https://www.langchain.com/contact-sales). Other plans default to using the Admin role for all users.
 </Note>
 
-### Workspace Admin
+#### Workspace Admin
 
-**Description**: Default role with full permissions for all resources and ability to manage workspace.
+**Description**: Role with full permissions for all resources and ability to manage workspace.
 
 **Permissions**:
 - All create, read, update, delete, and share permissions for all resource types
 - Workspace management capabilities
 
-### Workspace Editor
+#### Workspace Editor
 
 **Description**: Default role with full permissions for most resources. Cannot manage workspace settings or delete certain critical resources.
 
 **Key Differences from Admin**:
-- Cannot delete annotation queues
-- Cannot create or delete projects (can only read and update)
-- Cannot delete datasets
-- Cannot share datasets
-- Cannot delete deployments
 - Cannot delete runs
 - Cannot manage workspace settings (add/remove members, change workspace name, etc.)
 
-### Workspace Viewer
+#### Workspace Viewer
 
 **Description**: Read-only access to all workspace resources.
 
@@ -164,7 +159,7 @@ Custom roles are created at the organization level and can be assigned to users 
 3. Select the permissions to include in the role.
 4. Assign the custom role to users in specific workspaces.
 
-For details on which specific permissions are required for each operation, refer to the [Workspace Operations Reference](/langsmith/workspace-operations).
+For details on which specific permissions are required for each operation, refer to the [Organization and workspace operations reference](/langsmith/organization-workspace-operations).
 
 Note the following details on custom roles:
 
