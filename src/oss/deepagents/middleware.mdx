@@ -151,8 +151,7 @@ agent = create_agent(
 :::js
 ```typescript
 import { createAgent } from "langchain";
-import { createFilesystemMiddleware } from "deepagents";
-import { CompositeBackend, StateBackend, StoreBackend } from "deepagents";
+import { createFilesystemMiddleware, CompositeBackend, StateBackend, StoreBackend } from "deepagents";
 import { InMemoryStore } from "@langchain/langgraph-checkpoint";
 
 const store = new InMemoryStore();
