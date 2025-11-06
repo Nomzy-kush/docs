@@ -3,6 +3,8 @@ title: Overview
 sidebarTitle: Overview
 ---
 
+import OrgWorkspaceRole from '/snippets/langsmith/multi-workspace-org-roles.mdx';
+
 This overview covers topics related to managing users, organizations, and workspaces within LangSmith.
 
 ## Resource Hierarchy
@@ -126,7 +128,7 @@ The organization role selected also impacts workspace membership as described he
 * `Organization Viewer` is equivalent to `Organization User`, but **cannot** create Personal Access Tokens. (for self-hosted, available in Helm chart version 0.11.25+)
 
 <Info>
-The `Organization User` and `Organization Viewer` roles are only available in organizations on plans with multiple workspaces. In organizations limited to a single workspace, all users are `Organization Admins`. Custom organization-scoped roles are not available yet.
+<OrgWorkspaceRole/>
 
 See [security settings](/langsmith/manage-organization-by-api#security-settings) for instructions on how to disable PAT creation for the entire organization.
 </Info>
@@ -170,7 +172,7 @@ Roles can be managed in organization settings under the `Roles` tab:
 
 ![Roles](/langsmith/images/roles-tab-rbac.png)
 
-For comprehensive documentation on roles and permissions, refer to the [Role-based access control](/langsmith/rbac) guide. For a detailed operations reference table, refer to the [Workspace Operations](/langsmith/workspace-operations) page. For more details on assigning and creating roles, refer to the [User Management](/langsmith/user-management) guide.
+For comprehensive documentation on roles and permissions, refer to the [Role-based access control](/langsmith/rbac) guide. For a detailed operations reference table, refer to the [Workspace Operations](/langsmith/organization-workspace-operations) page. For more details on assigning and creating roles, refer to the [User Management](/langsmith/user-management) guide.
 
 ## Best Practices
 
