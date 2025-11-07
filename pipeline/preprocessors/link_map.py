@@ -253,6 +253,7 @@ LINK_MAPS: list[LinkMap] = [
             "ThreadsClient.create": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.create",
             "ThreadsClient.copy": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.copy",
             "ThreadsClient.search": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.search",
+            "ThreadsClient.get_history": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.get_history",
             "RunsClient": "langsmith/deployment/sdk/#langgraph_sdk.client.RunsClient",
             "RunsClient.stream": "langsmith/deployment/sdk/#langgraph_sdk.client.RunsClient.stream",
             "CronClient": "langsmith/deployment/sdk/#langgraph_sdk.client.CronClient",
