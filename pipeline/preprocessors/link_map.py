@@ -247,8 +247,14 @@ LINK_MAPS: list[LinkMap] = [
             "SyncHttpClient": "langsmith/deployment/sdk/#langgraph_sdk.client.SyncHttpClient",
             # Resource clients - Async
             "AssistantsClient": "langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient",
+            "AssistantsClient.create": "langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.create",
+            "AssistantsClient.update": "langsmith/deployment/sdk/#langgraph_sdk.client.AssistantsClient.update",
             "ThreadsClient": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient",
+            "ThreadsClient.create": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.create",
+            "ThreadsClient.copy": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.copy",
+            "ThreadsClient.search": "langsmith/deployment/sdk/#langgraph_sdk.client.ThreadsClient.search",
             "RunsClient": "langsmith/deployment/sdk/#langgraph_sdk.client.RunsClient",
+            "RunsClient.stream": "langsmith/deployment/sdk/#langgraph_sdk.client.RunsClient.stream",
             "CronClient": "langsmith/deployment/sdk/#langgraph_sdk.client.CronClient",
             "StoreClient": "langsmith/deployment/sdk/#langgraph_sdk.client.StoreClient",
             # Resource clients - Sync
