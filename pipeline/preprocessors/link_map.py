@@ -334,6 +334,18 @@ LINK_MAPS: list[LinkMap] = [
             "tool": "functions/_langchain_core.tools.tool.html",
             "ToolNode": "classes/langchain.index.ToolNode.html",
             "UsageMetadata": "types/_langchain_core.messages.UsageMetadata.html",
+            # LangSmith Deployment SDK - JS
+            "ThreadsClient": "classes/_langchain_langgraph-sdk.client.ThreadsClient.html",
+            "ThreadsClient.create": "classes/_langchain_langgraph-sdk.client.ThreadsClient.html#create",
+            "ThreadsClient.copy": "classes/_langchain_langgraph-sdk.client.ThreadsClient.html#copy",
+            "ThreadsClient.search": "classes/_langchain_langgraph-sdk.client.ThreadsClient.html#search",
+            "ThreadsClient.getHistory": "classes/_langchain_langgraph-sdk.client.ThreadsClient.html#gethistory",
+            "AssistantsClient": "classes/_langchain_langgraph-sdk.client.AssistantsClient.html",
+            "AssistantsClient.create": "classes/_langchain_langgraph-sdk.client.AssistantsClient.html#create",
+            "AssistantsClient.update": "classes/_langchain_langgraph-sdk.client.AssistantsClient.html#update",
+            "AssistantsClient.search": "classes/_langchain_langgraph-sdk.client.AssistantsClient.html#search",
+            "RunsClient": "classes/_langchain_langgraph-sdk.client.RunsClient.html",
+            "RunsClient.stream": "classes/_langchain_langgraph-sdk.client.RunsClient.html#stream",
         },
     },
 ]
