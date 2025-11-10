@@ -1,0 +1,27 @@
+{
+  "enabled_checks": [
+    "grammar",
+    "spelling",
+    "style_guide",
+    "mdx_syntax",
+    "frontmatter",
+    "code_blocks",
+    "internal_links"
+  ],
+  "exclude_patterns": [
+    "**/reference/**",
+    "**/node_modules/**",
+    "**/.venv/**",
+    "**/dist/**",
+    "**/build/**"
+  ],
+  "max_issues_per_file": 20,
+  "severity_threshold": "minor",
+  "style_guide_url": "https://developers.google.com/style",
+  "custom_rules": {
+    "frontmatter_required_fields": ["title", "description"],
+    "heading_case": "sentence-case",
+    "voice": "second-person",
+    "language_variant": "american-english"
+  }
+}

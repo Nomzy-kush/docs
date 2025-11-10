@@ -1,0 +1,28 @@
+{
+  "total_reviews": 0,
+  "accepted_patterns": [],
+  "ignored_patterns": [],
+  "statistics": {
+    "total_issues_found": 0,
+    "issues_by_category": {
+      "grammar": 0,
+      "spelling": 0,
+      "style": 0,
+      "syntax": 0,
+      "frontmatter": 0,
+      "code_blocks": 0,
+      "links": 0,
+      "images": 0
+    },
+    "issues_by_severity": {
+      "critical": 0,
+      "major": 0,
+      "minor": 0
+    }
+  },
+  "learning_data": {
+    "accepted_suggestions": [],
+    "ignored_suggestions": [],
+    "false_positives": []
+  }
+}
