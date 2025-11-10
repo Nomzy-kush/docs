@@ -193,6 +193,11 @@ LINK_MAPS: list[LinkMap] = [
             "on_llm_new_token": "langchain_core/callbacks/#langchain_core.callbacks.base.AsyncCallbackHandler.on_llm_new_token",
             # Rate limiters
             "InMemoryRateLimiter": "langchain_core/rate_limiters/#langchain_core.rate_limiters.InMemoryRateLimiter",
+            # LangSmith SDK
+            "Client": "langsmith/observability/sdk/client/#langsmith.client.Client",
+            "Client.evaluate": "langsmith/observability/sdk/client/#langsmith.client.Client.evaluate",
+            "Client.aevaluate": "langsmith/observability/sdk/client/#langsmith.client.Client.aevaluate",
+            "Client.get_experiment_results": "langsmith/observability/sdk/client/#langsmith.client.Client.get_experiment_results",
             # LangGraph
             "get_stream_writer": "langgraph/config/#langgraph.config.get_stream_writer",
             "StateGraph": "langgraph/graphs/#langgraph.graph.state.StateGraph",
