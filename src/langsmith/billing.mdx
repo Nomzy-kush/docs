@@ -15,44 +15,36 @@ This page describes how to manage billing for your LangSmith organization:
 Before using this guide, note the following:
 
 - If you are interested in the [Enterprise](https://www.langchain.com/pricing) plan, please [contact sales](https://www.langchain.com/contact-sales). This guide is only for our self-serve billing plans.
-- If you created your LangSmith organization before pricing was introduced on April 2nd, 2024, please [skip to the final section](#set-up-billing-for-accounts-created-before-pricing-was-introduced-on-april-2-2024).
 </Note>
 
-To set up billing for your LangSmith organization, navigate to the [Usage and Billing](https://smith.langchain.com/settings/payments) page under **Settings**. Depending on your organization's settings, there are different setup guides:
+To set up billing for your LangSmith organization, navigate to the [Billing and Usage](https://smith.langchain.com/settings/payments) page under **Settings**. Depending on your organization's settings, there are different setup guides:
 
 - [Developer plan](#developer-plan%3A-set-up-billing-on-your-personal-organization)
 - [Plus plan](#plus-plan%3A-set-up-billing-on-a-shared-organization)
 
 ### Developer Plan: set up billing on your personal organization
 
-Personal organizations are limited to 5,000 traces per month until a credit card is added. You can add a credit card on the **Plans and Billing** page as follows:
+Personal organizations are limited to 5,000 traces per month until a credit card is added. To add a card:
 
-1. Click **Set up Billing**.
-1. Add your credit card information. After this step, you will no longer be rate limited to 5,000 traces, and you will be charged for any excess traces at rates specified on the [pricing](https://www.langchain.com/pricing-langsmith) page.
+1. Click **Add card to remove trace limit**.
+1. Add your credit card information.
+1. Once complete, you will no longer be rate limited to 5,000 traces, and you will be charged for any excess traces at rates specified on the [pricing](https://www.langchain.com/pricing-langsmith) page.
 
 ### Plus Plan: set up billing on a shared organization
-
-If you have not yet created an organization, you need to follow [this guide](/langsmith/set-up-a-workspace#set-up-an-organization) before setting up billing. The following steps assume you are already in a new organization.
-
-<Note>
-You can't use a new organization until you enter credit card information. After you complete the following steps, you will gain complete access to LangSmith.
-</Note>
-
-1. Click **Subscribe** on the **Plus** page.
-1. Review your existing members. Before subscribing, LangSmith lets you remove any added users that you do **not** want to be included in the bill.
-1. Enter your credit card information. Then, enter business information, invoice email, and tax ID. If this organization belongs to a business, check the **This is a business** checkbox and enter the information accordingly.
-
-For more information, refer to the [Update your information section](#update-your-information).
-
-Once this step is complete, your organization will have access to the rest of LangSmith.
-
-## Update your information
-
-To update business information for your LangSmith organization, head to the [Usage and Billing](https://smith.langchain.com/settings/payments) page under **Settings** and click on the [Plans and Billing](https://smith.langchain.com/settings/payments?tab=2) tab.
+Team organizations are given an initial 10,000 traces per month. Any excess traces will be charged at rates specified on the [pricing](https://www.langchain.com/pricing-langsmith) page.
 
 <Note>
-Business information, tax ID, and invoice email can only be updated for the Plus and Startup plans. Free and Developer plans cannot update this information.
+New organizations that you manually create are required to be on the Plus Plan. If you see a message about needing to upgrade to Plus to use this organization, follow these steps.
 </Note>
+
+1. Click **Upgrade to Plus**.
+1. Invite members to your organization, as desired.
+1. Enter your credit card information. Then, enter business information, invoice email, and tax ID. If this organization belongs to a business, check the **This is a business** checkbox and enter the information accordingly. For more information, refer to the [Update your information section](#update-your-information).
+
+## Update your information (Paid plans only)
+
+To update business information for your LangSmith organization, head to the [Billing and Usage](https://smith.langchain.com/settings/payments) page under **Settings**.
+
 
 ### Invoice email
 
@@ -105,51 +97,39 @@ You will learn how to optimize existing spend and prevent future overspend in La
 
 This tutorial will use an existing LangSmith organization with high usage. You can transfer the concepts from this example to your own organization. The example organization has three [workspaces](/langsmith/administration-overview#workspaces), one for each deployment stage (`Dev`, `Staging`, and `Prod`):
 
-![](/langsmith/images/workspaces.png)
 
 ### Understand your current usage
 
 The first step of any optimization process is to understand current usage. LangSmith provides two ways to do this: [Usage graph](#usage-graph) and [Invoices](#invoices).
 
+LangSmith Usage is measured per workspace, because workspaces often represent development environments (as in the example), or teams within an organization.
+
+
 #### Usage graph
 
 The usage graph lets you examine how much of each usage-based pricing metric you have consumed. It does not directly show spend (which you will review later in the draft invoice).
 
-You can navigate to the usage graph under **Settings** -> **Usage and Billing** -> **Usage Graph**.
+Navigate to the usage graph under **Settings** -> **Billing and Usage** -> **Usage Graph**.
 
-![](/langsmith/images/usage-graph.png)
-
-This graph shows that there are two usage metrics that LangSmith charges for:
+There are two usage metrics that LangSmith charges for:
 
 - LangSmith Traces (Base Charge): tracks all traces that you send to LangSmith.
 - LangSmith Traces (Extended Data Retention Upgrades): tracks all traces that also have our Extended 400 Day Data Retention.
 
-For more details, refer to the [data retention conceptual docs](/langsmith/administration-overview#data-retention). Notice that these graphs look identical, which you will review later in the tutorial.
+For more details, refer to the [data retention conceptual docs](/langsmith/administration-overview#data-retention).
 
-LangSmith Traces usage is measured per workspace, because workspaces often represent development environments (as in the example), or teams within an organization. As a LangSmith administrator, you may want to understand spend granularly per each of these units. In this case where you just want to cut spend, you can focus on the environment responsible for the majority of costs first for the greatest savings.
 
 #### Invoices
 
-You understand what usage looks like in terms of traces, but you now need to translate that into spend. To do so, navigate to the **Invoices** tab. The first invoice that will appear on screen is a draft of your current month's invoice, which shows your running spend thus far this month.
-
-![](/langsmith/images/invoice-investigation-v2.gif)
+To understand how your usage translates to spend, navigate to the **Invoices** tab. The first invoice that will appear on screen is a draft of your current month's invoice, which shows your running spend thus far this month.
 
 <Note>
 LangSmith's Usage Graph and Invoice use the term `tenant_id` to refer to a workspace ID. They are interchangeable.
 </Note>
 
-In the GIF, you'll see that the charges for LangSmith Traces are broken up by "tenant\_id" (i.e., workspace ID), which means you can track tracing spend on each of the workspaces. In the first few days of June, the vast majority of the total spend of roughly $2,000 is in the production workspace. Further, the majority of spend in that workspace was on extended data retention trace upgrades.
-
-These upgrades occur for two reasons:
-
-1. You use extended data retention tracing, which means by default your traces are retained for 400 days.
-2. You use base data retention tracing and use a feature that automatically extends the data retention of a trace. ([Refer to the Auto-Upgrade conceptual docs](/langsmith/administration-overview#data-retention).)
-
-Given that the number of total traces per day is equal to the number of extended retention traces per day, it's most likely the case that this organization is using extended data retention tracing everywhere. As a result, start by optimizing the retention settings.
-
 ### Optimization 1: manage data retention
 
-LangSmith charges differently based on a trace's [data retention](/langsmith/administration-overview#data-retention), where short-lived traces are an order of magnitude less expensive than ones that last for a long time. In this optimization, you'll learn how to get optimal settings for data retention without sacrificing historical observability, and see the effect it has on the bill.
+LangSmith charges differently based on a trace's [data retention](/langsmith/administration-overview#data-retention), where short-lived traces are an order of magnitude less expensive than long-lived traces. In this optimization, you'll learn how to get optimal settings for data retention without sacrificing historical observability, and see the effect it has on the bill.
 
 #### Change org level retention defaults for new projects
 
