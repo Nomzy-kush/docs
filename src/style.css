@@ -68,3 +68,22 @@ a[href] code {
     display: none;
   }
 
+
+/* Wrap long code lines and prevent button overlap */
+pre code,
+.md-typeset pre,
+pre[class*="language-"] {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+pre,
+.md-typeset pre {
+  padding-right: 3.5rem;
+}
+
+pre {
+  overflow-x: auto;
+}
+
